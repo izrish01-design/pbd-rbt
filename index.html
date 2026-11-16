@@ -1,0 +1,2632 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>e-Rekod PBD RBT (Tahun 4, 5 & 6)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Gelombang Transisi Bulat Bermula dari Butang Tema (Water Drop Effect) */
+    #themeRippleOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      clip-path: circle(0px at var(--ripple-x, 95%) var(--ripple-y, 32px));
+      transition: clip-path 0.85s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    }
+    #themeRippleOverlay.active {
+      clip-path: circle(165vmax at var(--ripple-x, 95%) var(--ripple-y, 32px));
+    }
+
+    /* Gelang Riak Titisan Air (Water Drop Ring) */
+    #waterDropRing {
+      position: fixed;
+      left: var(--ripple-x, 95%);
+      top: var(--ripple-y, 32px);
+      width: 24px;
+      height: 24px;
+      border-radius: 9999px;
+      transform: translate(-50%, -50%) scale(0.2);
+      pointer-events: none;
+      z-index: 10000;
+      opacity: 0;
+      border: 2.5px solid rgba(184, 147, 180, 0.85);
+      box-shadow: 0 0 24px rgba(184, 147, 180, 0.55), inset 0 0 12px rgba(255, 255, 255, 0.35);
+    }
+    #waterDropRing.splash {
+      animation: waterDropWave 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes waterDropWave {
+      0% {
+        transform: translate(-50%, -50%) scale(0.2);
+        opacity: 0.95;
+        border-width: 3px;
+      }
+      55% {
+        opacity: 0.65;
+        border-width: 2px;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(95);
+        opacity: 0;
+        border-width: 0.5px;
+      }
+    }
+
+    /* Tema Dark Plum / Obsidian Luxury (Mengikut Rujukan) */
+    body.helios-theme {
+      background-color: #161317;
+      background-image: radial-gradient(circle at 80% 0%, rgba(184, 147, 180, 0.14), transparent 42%),
+                        radial-gradient(circle at 10% 90%, rgba(184, 147, 180, 0.08), transparent 40%);
+      color: #f4eff4;
+      transition: background-color 0.55s cubic-bezier(0.22, 1, 0.36, 1), color 0.45s ease;
+    }
+
+    /* Gelombang Transisi Bulat Bermula dari Butang Tema */
+    #themeRippleOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      clip-path: circle(0px at var(--ripple-x, 95%) var(--ripple-y, 32px));
+      transition: clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    }
+    #themeRippleOverlay.active {
+      clip-path: circle(150vmax at var(--ripple-x, 95%) var(--ripple-y, 32px));
+    }
+
+    /* Suis Kapsul Minimalis Matahari & Bulan */
+    .theme-switch-pill {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      width: 66px;
+      height: 34px;
+      padding: 3px;
+      border-radius: 9999px;
+      background-color: #1c171e;
+      border: 1px solid #352b38;
+      cursor: pointer;
+      transition: background-color 0.45s ease, border-color 0.45s ease, box-shadow 0.3s ease;
+    }
+    .theme-switch-pill:hover {
+      border-color: #b893b4;
+    }
+    body.light-theme .theme-switch-pill {
+      background-color: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+    .theme-switch-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 26px;
+      height: 26px;
+      border-radius: 9999px;
+      background-color: #b893b4;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      transform: translateX(0px);
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.45s ease;
+    }
+    body.light-theme .theme-switch-thumb {
+      transform: translateX(32px);
+      background-color: #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+    }
+    .theme-icon-slot {
+      position: relative;
+      z-index: 2;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.35s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .helios-card, header, footer, #authGateScreen, #authGateScreen input, #authGateScreen button, #authGateScreen > div > div {
+      transition: background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                  color 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .helios-card {
+      background-color: #0d0b0e;
+      border: 1px solid #2b242c;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+    }
+
+    .helios-plum-glow {
+      background: linear-gradient(135deg, rgba(184, 147, 180, 0.22) 0%, rgba(13, 11, 14, 0.96) 75%);
+      border: 1px solid rgba(184, 147, 180, 0.35);
+    }
+
+    .helios-pill-active {
+      background: linear-gradient(90deg, rgba(184, 147, 180, 0.35) 0%, rgba(184, 147, 180, 0.12) 100%);
+      border-color: #b893b4 !important;
+      color: #ffffff !important;
+    }
+
+    /* Tema Light Mode */
+    body.light-theme {
+      background-color: #f4f5f7;
+      background-image: none;
+      color: #0f172a;
+    }
+    body.light-theme #authGateScreen {
+      background-color: rgba(241, 245, 249, 0.94) !important;
+    }
+    body.light-theme #authGateScreen input {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    body.light-theme #authGateScreen .bg-\[\#0d0b0e\] {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    body.light-theme #authGateScreen .bg-\[\#261f28\] {
+      background-color: #e2e8f0 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    body.light-theme #authGateScreen .text-\[\#e9d5e7\] {
+      color: #0f172a !important;
+    }
+    body.light-theme header {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    body.light-theme header h1,
+    body.light-theme header #liveClockTime {
+      color: #0f172a !important;
+    }
+    body.light-theme header span.text-\[\#d8b8d4\] {
+      color: #7c3aed !important;
+    }
+    body.light-theme header p,
+    body.light-theme header #liveClockDate {
+      color: #64748b !important;
+    }
+    body.light-theme .helios-card {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.08) !important;
+      color: #0f172a !important;
+    }
+    body.light-theme .helios-plum-glow {
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%) !important;
+      border-color: #cbd5e1 !important;
+    }
+    body.light-theme .helios-pill-active {
+      background: #0f172a !important;
+      border-color: #0f172a !important;
+      color: #ffffff !important;
+    }
+    body.light-theme .text-white {
+      color: #0f172a !important;
+    }
+    body.light-theme .helios-pill-active,
+    body.light-theme .bg-\[\#b893b4\],
+    body.light-theme #bulkPreviewCount {
+      color: #ffffff !important;
+    }
+    body.light-theme .text-\[\#c7bcc8\],
+    body.light-theme .text-\[\#a599a7\],
+    body.light-theme .text-\[\#9c8f9e\],
+    body.light-theme .text-\[\#b8adb9\] {
+      color: #475569 !important;
+    }
+    body.light-theme .text-\[\#d8b8d4\],
+    body.light-theme .text-\[\#eed8ec\],
+    body.light-theme .text-\[\#e8cde5\] {
+      color: #6d28d9 !important;
+    }
+    body.light-theme .bg-\[\#18141a\],
+    body.light-theme .bg-\[\#161218\],
+    body.light-theme .bg-\[\#151117\],
+    body.light-theme .bg-\[\#141115\],
+    body.light-theme .bg-\[\#1e1920\],
+    body.light-theme .bg-\[\#241d26\],
+    body.light-theme .bg-\[\#0d0b0e\]\/90 {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    body.light-theme footer {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #64748b !important;
+    }
+
+    /* Custom Scrollbar untuk Jadual PBD yang lebar */
+    .pbd-scroll::-webkit-scrollbar {
+      height: 10px;
+      width: 10px;
+    }
+    .pbd-scroll::-webkit-scrollbar-track {
+      background: #1a161b;
+      border-radius: 6px;
+    }
+    .pbd-scroll::-webkit-scrollbar-thumb {
+      background: #473b49;
+      border-radius: 6px;
+      border: 2px solid #1a161b;
+    }
+    .pbd-scroll::-webkit-scrollbar-thumb:hover {
+      background: #b893b4;
+    }
+
+    /* Sticky columns shadow effect */
+    .sticky-col-shadow {
+      box-shadow: 4px 0 8px -2px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Calendar picker styling */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.75;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+
+    /* Animasi Toast */
+    @keyframes slideInUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .toast-enter {
+      animation: slideInUp 0.25s ease-out forwards;
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body class="helios-theme antialiased min-h-screen flex flex-col">
+
+  <!-- Lapisan Gelombang Transisi Tema dari Butang (Water Drop) -->
+  <div id="themeRippleOverlay"></div>
+  <div id="waterDropRing"></div>
+
+  <!-- ===================================================================== -->
+  <!-- SKRIN LOG MASUK GURU (KUNCI AKSES 1 GURU 1 AKAUN)                     -->
+  <!-- ===================================================================== -->
+  <div id="authGateScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#09070a]/95 backdrop-blur-md p-4 overflow-y-auto">
+    <!-- Suis Minimalis Matahari & Bulan di Luar (Skrin Log Masuk) -->
+    <button type="button" onclick="toggleTheme(event)" title="Tukar Tema Gelap / Cerah" aria-label="Tukar Tema"
+      class="theme-switch-pill fixed top-4 right-4 z-50 shadow-lg">
+      <span class="theme-switch-thumb"></span>
+      <span class="theme-icon-slot mr-auto text-[#0d0b0e] dark-slot">
+        <!-- Bulan Minimalis -->
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        </svg>
+      </span>
+      <span class="theme-icon-slot ml-auto text-slate-400 light-slot">
+        <!-- Matahari Minimalis -->
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4" />
+          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" />
+        </svg>
+      </span>
+    </button>
+
+    <div class="helios-card rounded-3xl w-full max-w-md overflow-hidden my-auto">
+      <div class="px-6 py-5 helios-plum-glow text-white text-center border-b border-[#2b242c]">
+        <div class="w-12 h-12 rounded-2xl bg-[#b893b4]/20 border border-[#b893b4]/40 flex items-center justify-center mx-auto mb-2.5">
+          <svg class="w-6 h-6 text-[#d8b8d4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h2 class="font-display text-lg sm:text-xl font-extrabold tracking-tight text-white">e-Rekod PBD RBT <span class="text-[#d8b8d4]">(Tahun 4, 5 & 6)</span></h2>
+        <p class="text-xs text-[#a599a7] mt-1">Kunci Akses Peribadi Guru — 1 Akaun 1 Pengguna</p>
+      </div>
+
+      <!-- Tab Log Masuk / Daftar Baharu -->
+      <div class="grid grid-cols-2 border-b border-[#2b242c] bg-[#141115]">
+        <button type="button" id="tabLoginBtn" onclick="switchAuthMode('login')"
+          class="py-3 text-xs font-extrabold uppercase tracking-wider border-b-2 border-[#b893b4] text-white bg-[#1e1920] cursor-pointer transition">
+          Log Masuk Akaun
+        </button>
+        <button type="button" id="tabRegisterBtn" onclick="switchAuthMode('register')"
+          class="py-3 text-xs font-extrabold uppercase tracking-wider border-b-2 border-transparent text-[#8c7f8e] hover:text-white cursor-pointer transition">
+          Daftar Akaun Baharu
+        </button>
+      </div>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)" class="p-6 space-y-4">
+        <div id="authErrorBox" class="hidden p-3 rounded-xl bg-rose-950/70 border border-rose-500/50 text-xs font-bold text-rose-200"></div>
+
+        <div id="registerFullNameGroup" class="hidden">
+          <label for="authFullName" class="block text-xs font-bold text-[#c7bcc8] uppercase tracking-wider mb-1">
+            Nama Penuh Guru <span class="text-rose-400">*</span>
+          </label>
+          <input type="text" id="authFullName" placeholder="Contoh: Cikgu Siti Aminah binti Ali"
+            class="w-full px-3.5 py-2.5 bg-[#18141a] border border-[#322934] rounded-xl text-sm font-semibold text-white placeholder-[#695d6b] focus:border-[#b893b4] focus:ring-1 focus:ring-[#b893b4] outline-none" />
+        </div>
+
+        <div>
+          <label for="authTeacherId" class="block text-xs font-bold text-[#c7bcc8] uppercase tracking-wider mb-1">
+            ID Pengguna <span class="text-rose-400">*</span>
+          </label>
+          <input type="text" id="authTeacherId" required placeholder="Contoh: cikgu.aminah"
+            class="w-full px-3.5 py-2.5 bg-[#18141a] border border-[#322934] rounded-xl text-sm font-semibold text-white placeholder-[#695d6b] focus:border-[#b893b4] focus:ring-1 focus:ring-[#b893b4] outline-none" />
+        </div>
+
+        <div>
+          <label for="authTeacherPin" class="block text-xs font-bold text-[#c7bcc8] uppercase tracking-wider mb-1">
+            Kata Laluan / PIN Rahsia <span class="text-rose-400">*</span>
+          </label>
+          <input type="password" id="authTeacherPin" required placeholder="Masukkan kata laluan / PIN anda"
+            class="w-full px-3.5 py-2.5 bg-[#18141a] border border-[#322934] rounded-xl text-sm font-semibold text-white placeholder-[#695d6b] focus:border-[#b893b4] focus:ring-1 focus:ring-[#b893b4] outline-none" />
+        </div>
+
+        <button type="submit" id="authSubmitBtn"
+          class="w-full py-3 rounded-xl bg-[#b893b4] hover:bg-[#c8a5c4] text-[#0d0b0e] font-extrabold text-sm shadow-sm transition cursor-pointer">
+          Buka Kunci & Masuk ke Rekod Saya
+        </button>
+
+        <p class="text-[11px] text-center text-[#8c7f8e] leading-relaxed pt-1">
+          Semua data murid, tarikh SP dan TP dikunci di bawah ID & PIN anda sahaja. Klik <strong class="text-[#d8b8d4]">Log Keluar</strong> selepas selesai untuk mengunci semula rekod.
+        </p>
+
+        <!-- Pemisah Pilihan Tanpa Log Masuk -->
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-[#2b242c]"></div>
+          <span class="flex-shrink mx-3 text-[11px] font-bold uppercase tracking-wider text-[#695d6b]">Atau</span>
+          <div class="flex-grow border-t border-[#2b242c]"></div>
+        </div>
+
+        <!-- Bahagian Terus Guna Tanpa Akaun -->
+        <div class="bg-[#151117] border border-[#2b242c] rounded-2xl p-3.5 space-y-2.5">
+          <label for="guestTeacherNameInput" class="block text-xs font-bold text-[#c7bcc8]">
+            Terus Guna Tanpa Log Masuk (Isi Nama Penuh Guru):
+          </label>
+          <input type="text" id="guestTeacherNameInput" placeholder="Contoh: Cikgu Ahmad bin Abdullah"
+            onkeydown="if(event.key==='Enter'){ event.preventDefault(); enterGuestMode(); }"
+            class="w-full px-3 py-2 bg-[#0d0b0e] border border-[#322934] rounded-xl text-sm font-semibold text-white placeholder-[#695d6b] focus:border-[#b893b4] outline-none" />
+          <button type="button" onclick="enterGuestMode()"
+            class="w-full py-2.5 rounded-xl bg-[#261f28] hover:bg-[#332936] border border-[#b893b4]/40 text-[#e9d5e7] font-bold text-xs shadow-xs transition cursor-pointer">
+            Terus Masuk Tanpa Akaun →
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Top Navigation / Hero Header -->
+  <header class="bg-[#0d0b0e]/95 backdrop-blur-md border-b border-[#2b242c] text-white shadow-lg no-print">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl helios-plum-glow flex items-center justify-center shrink-0">
+            <svg class="w-7 h-7 text-[#d8b8d4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="font-display text-lg sm:text-xl font-extrabold tracking-tight text-white">
+                e-Rekod PBD RBT <span class="text-[#d8b8d4]">(Tahun 4, 5 & 6)</span>
+              </h1>
+              <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[#b893b4]/20 text-[#e5cbe2] border border-[#b893b4]/40">
+                KSSR Semakan
+              </span>
+            </div>
+        <!-- Jam Masa Nyata, Penukar Tema, Auto-Save Indicator & Logout -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Suis Minimalis Matahari & Bulan -->
+          <button type="button" id="themeToggleBtn" onclick="toggleTheme(event)" title="Tukar Tema Gelap / Cerah" aria-label="Tukar Tema"
+            class="theme-switch-pill">
+            <span class="theme-switch-thumb"></span>
+            <span class="theme-icon-slot mr-auto text-[#0d0b0e] dark-slot">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+              </svg>
+            </span>
+            <span class="theme-icon-slot ml-auto text-slate-400 light-slot">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4" />
+                <path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" />
+              </svg>
+            </span>
+          </button>
+
+          <!-- Jam & Tarikh Digital -->
+          <div class="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-[#18141a] border border-[#2f2731]">
+            <svg class="w-4 h-4 text-[#d8b8d4] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="leading-tight">
+              <div id="liveClockTime" class="font-mono text-xs sm:text-sm font-extrabold text-white tracking-wider">--:--:--</div>
+              <div id="liveClockDate" class="text-[10px] text-[#a599a7] font-medium">Memuatkan tarikh...</div>
+            </div>
+          </div>
+
+          <div id="saveStatusBadge" class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#18141a] border border-[#2f2731] text-xs font-medium text-[#d8b8d4]">
+            <span id="saveStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="saveStatusText">Menyambung simpanan kekal...</span>
+          </div>
+
+          <button type="button" onclick="logoutTeacher()" title="Kembali ke Skrin Utama / Tukar Mod"
+            class="px-3.5 py-2 rounded-2xl bg-[#241d26] hover:bg-rose-950/80 text-[#f3e6f2] hover:text-rose-200 text-xs font-bold border border-[#3a2f3d] hover:border-rose-500/40 transition flex items-center gap-1.5 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span id="logoutBtnText">Log Keluar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- STEP 1 & 2: Maklumat Guru & Pilihan Tahun / Kelas -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-5 no-print">
+      
+      <!-- Kad Maklumat Guru (Depan Sekali) -->
+      <div class="lg:col-span-5 helios-card helios-plum-glow rounded-3xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-[#b893b4] text-[#0d0b0e] font-extrabold text-xs flex items-center justify-center">1</span>
+              <h2 class="font-display font-bold text-white text-base">Maklumat Guru Mata Pelajaran</h2>
+            </div>
+            <span class="text-[11px] font-medium text-[#a599a7]">Kekal disimpan secara automatik</span>
+          </div>
+
+          <div class="space-y-3.5">
+            <div>
+              <label for="teacherName" class="block text-xs font-semibold text-[#c7bcc8] uppercase tracking-wider mb-1">
+                Nama Penuh Guru <span class="text-rose-400">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[#9c8f9e]">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </span>
+                <input type="text" id="teacherName" placeholder="Contoh: Cikgu Ahmad bin Abdullah"
+                  oninput="handleTeacherInfoChange()"
+                  class="w-full pl-9 pr-3.5 py-2.5 bg-[#0d0b0e]/90 border border-[#3a2f3d] rounded-2xl text-sm font-semibold text-white placeholder-[#695d6b] focus:border-[#b893b4] focus:ring-1 focus:ring-[#b893b4] outline-none transition" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-[#2b242c] flex items-center justify-between text-xs text-[#a599a7]">
+          <span>Sesi Persekolahan:</span>
+          <input type="text" id="academicSession" value="2026" oninput="handleTeacherInfoChange()"
+            class="w-24 text-right font-bold text-white bg-[#18141a] px-3 py-1 rounded-full border border-[#3a2f3d] focus:outline-none focus:border-[#b893b4]" />
+        </div>
+      </div>
+
+      <!-- Kad Pilihan Tahun & Kelas -->
+      <div class="lg:col-span-7 helios-card rounded-3xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-[#b893b4] text-[#0d0b0e] font-extrabold text-xs flex items-center justify-center">2</span>
+              <h2 class="font-display font-bold text-white text-base">Pilih Tahun & Kelas Diajar</h2>
+            </div>
+            <div id="activeClassBadge" class="px-3.5 py-1 rounded-full bg-[#b893b4]/20 border border-[#b893b4]/40 text-[#e8cde5] text-xs font-bold">
+              Kelas Aktif: Tahun 4 Alfa
+            </div>
+          </div>
+
+          <!-- Pilihan Tahun (Tahun 4, Tahun 5, Tahun 6) -->
+          <div class="mb-4">
+            <label class="block text-xs font-semibold text-[#a599a7] uppercase tracking-wider mb-1.5">Tahun</label>
+            <div class="grid grid-cols-3 gap-2.5" id="yearSelectorGroup">
+              <button type="button" onclick="selectYear(4)" data-year="4"
+                class="year-btn py-2.5 px-4 rounded-full font-bold text-sm border transition cursor-pointer flex items-center justify-center gap-2">
+                <span>Tahun 4</span>
+              </button>
+              <button type="button" onclick="selectYear(5)" data-year="5"
+                class="year-btn py-2.5 px-4 rounded-full font-bold text-sm border transition cursor-pointer flex items-center justify-center gap-2">
+                <span>Tahun 5</span>
+              </button>
+              <button type="button" onclick="selectYear(6)" data-year="6"
+                class="year-btn py-2.5 px-4 rounded-full font-bold text-sm border transition cursor-pointer flex items-center justify-center gap-2">
+                <span>Tahun 6</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Pilihan Kelas (Alfa, Beta, Delta, Gamma, Sigma, Omega, Zeta + Tambah) -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-semibold text-[#a599a7] uppercase tracking-wider">Nama Kelas</label>
+              <button type="button" onclick="openAddClassModal()" class="text-xs font-semibold text-[#d8b8d4] hover:text-white flex items-center gap-1 cursor-pointer">
+                <span>+ Tambah Kelas Lain</span>
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-2" id="classSelectorGroup">
+              <!-- Dijana secara dinamik oleh JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Bar Ringkasan Kelas & Tindakan Pantas -->
+        <div class="mt-4 pt-3 border-t border-[#2b242c] flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-4 text-xs">
+            <span class="text-[#a599a7]">Jumlah Murid: <strong id="studentCountDisplay" class="text-white text-sm">0</strong> orang</span>
+            <span class="text-[#a599a7]">Jumlah SP: <strong id="spCountDisplay" class="text-[#4ade80] text-sm">0</strong></span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="openBulkModal()"
+              class="px-4 py-2 rounded-full bg-[#b893b4] hover:bg-[#caa7c6] text-[#0d0b0e] text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span>Tampal Senarai Nama Murid (Auto-Nombor)</span>
+            </button>
+
+            <button type="button" onclick="addSingleStudentPrompt()"
+              class="px-3.5 py-2 rounded-full bg-[#1a161c] hover:bg-[#261f29] border border-[#362c39] text-[#e5dce6] text-xs font-semibold transition flex items-center gap-1 cursor-pointer">
+              <span>+ 1 Murid</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3: Kawalan Bab / Unit & Butang Muat Turun (Word / PDF) -->
+    <section class="helios-card rounded-3xl p-4 sm:p-5 no-print">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        
+        <!-- Penapis Bab / Unit -->
+        <div class="flex-1 space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-[#b893b4] text-[#0d0b0e] font-extrabold text-xs flex items-center justify-center">3</span>
+            <h2 class="font-display font-bold text-white text-sm sm:text-base">Tapis Mengikut Bab / Unit (DSKP RBT)</h2>
+          </div>
+          <div class="flex flex-wrap gap-1.5" id="unitFilterGroup">
+            <!-- Dijana secara dinamik oleh JS -->
+          </div>
+        </div>
+
+        <!-- Butang Muat Turun (Word & PDF) -->
+        <div class="flex flex-wrap items-center gap-2.5 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#2b242c] shrink-0">
+          <button type="button" onclick="downloadWord()"
+            class="px-4 py-2.5 rounded-full bg-[#1e1920] hover:bg-[#2a222d] border border-[#b893b4]/50 active:scale-[0.99] text-[#eed8ec] text-xs sm:text-sm font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4 text-[#d8b8d4]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Muat Turun Word (.doc)</span>
+          </button>
+
+          <button type="button" onclick="downloadPDF()"
+            class="px-4 py-2.5 rounded-full bg-[#b893b4] hover:bg-[#caa7c6] active:scale-[0.99] text-[#0d0b0e] text-xs sm:text-sm font-extrabold shadow-sm transition flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            <span>Muat Turun PDF (.pdf)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Panduan Ringkas -->
+      <div class="mt-4 pt-3 border-t border-[#2b242c] flex flex-wrap items-center justify-end gap-3 text-xs">
+        <div class="text-[#9c8f9e]">
+          Tip: Tetapkan <strong class="text-[#e5cbe2]">Tarikh</strong> di baris atas setiap SP (terus terpakai untuk semua murid).
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 4: Jadual Matriks PBD Utama (Kekal Hitam Putih Rasmi) -->
+    <section class="bg-white rounded-3xl shadow-xl border border-[#2b242c] overflow-hidden flex flex-col">
+      
+      <!-- Header Jadual -->
+      <div class="px-5 py-3.5 bg-white border-b-2 border-slate-900 text-slate-900 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <h3 id="tableBannerTitle" class="font-display font-extrabold text-sm sm:text-base tracking-tight">
+            REKOD PENTAKSIRAN BILIK DARJAH (PBD) — RBT TAHUN 4 ALFA
+          </h3>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <button type="button" onclick="clearCurrentClassRecords()" class="px-3.5 py-1.5 rounded-full border border-slate-400 bg-white hover:bg-slate-100 text-slate-800 font-semibold transition cursor-pointer">
+            Kosongkan Rekod TP Kelas Ini
+          </button>
+        </div>
+      </div>
+
+      <!-- Bekas Jadual Boleh Tatal (Horizontal & Vertical Scroll) -->
+      <div id="pbdTableWrapper" class="pbd-scroll overflow-x-auto max-h-[72vh] relative">
+        <!-- Jadual dijana sepenuhnya oleh JavaScript -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-[#0d0b0e] border-t border-[#2b242c] py-4 px-6 text-center text-xs text-[#8c7f8e] no-print">
+    Sistem Rekod PBD RBT KSSR Semakan (Tahun 4, 5 & 6) • Semua data disimpan secara kekal dan automatik.
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: Tampal Senarai Nama Murid (Bulk Paste + Auto Numbering)      -->
+  <!-- ===================================================================== -->
+  <div id="bulkPasteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+    <div class="helios-card rounded-3xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 helios-plum-glow text-white flex items-center justify-between border-b border-[#2b242c]">
+        <div>
+          <h3 class="font-display font-bold text-lg">Tampal Senarai Nama Murid</h3>
+          <p class="text-xs text-[#c7bcc8] mt-0.5">Salin terus dari Excel, APDM atau WhatsApp. Sistem akan susun nombor 1, 2, 3... secara automatik.</p>
+        </div>
+        <button onclick="closeBulkModal()" class="p-1.5 rounded-full hover:bg-white/15 text-white transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 overflow-y-auto">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-semibold text-[#c7bcc8]">Kelas Sasaran: <span id="modalTargetClass" class="text-[#d8b8d4] font-bold">Tahun 4 Alfa</span></span>
+          <button type="button" onclick="loadSampleStudents()" class="text-[#d8b8d4] hover:underline font-semibold cursor-pointer">
+            Isi Contoh 10 Nama Murid
+          </button>
+        </div>
+
+        <div>
+          <label for="bulkNamesTextarea" class="block text-xs font-semibold text-[#a599a7] mb-1.5">
+            Tampal (Paste) Nama Murid di bawah (Satu nama setiap baris):
+          </label>
+          <textarea id="bulkNamesTextarea" rows="10"
+            placeholder="Contoh:&#10;AHMAD DANISH BIN ZULKIFLI&#10;NUR AISYAH BINTI MOHD RAZAK&#10;MUHAMMAD IRFAN BIN HASSAN&#10;SITI NURHALIZA BINTI KAMAL&#10;CHONG WEI MING&#10;KAVITHA A/P SUBRAMANIAM"
+            oninput="updateBulkPreview()"
+            class="w-full p-3.5 bg-[#18141a] border border-[#322934] rounded-2xl text-sm font-medium text-white placeholder-[#695d6b] focus:border-[#b893b4] outline-none leading-relaxed"></textarea>
+        </div>
+
+        <!-- Pratonton Auto-Nombor -->
+        <div class="bg-[#151117] border border-[#2b242c] rounded-2xl p-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-bold text-[#c7bcc8]">Pratonton Susunan Auto-Nombor:</span>
+            <span id="bulkPreviewCount" class="text-xs font-bold text-[#0d0b0e] bg-[#b893b4] px-2.5 py-0.5 rounded-full">0 murid dikesan</span>
+          </div>
+          <div id="bulkPreviewList" class="max-h-32 overflow-y-auto text-xs text-[#c7bcc8] space-y-1 font-mono">
+            <p class="text-[#695d6b] italic">Tiada nama dimasukkan lagi...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-[#141115] border-t border-[#2b242c] flex flex-wrap items-center justify-between gap-2">
+        <button type="button" onclick="closeBulkModal()" class="px-4 py-2 rounded-full border border-[#362c39] text-[#c7bcc8] hover:bg-[#1f1a21] text-xs font-bold cursor-pointer">
+          Batal
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="applyBulkNames('append')"
+            class="px-4 py-2 rounded-full bg-[#241d26] hover:bg-[#312734] border border-[#b893b4]/40 text-[#eed8ec] text-xs font-bold cursor-pointer">
+            Tambah ke Senarai Sedia Ada
+          </button>
+          <button type="button" onclick="applyBulkNames('replace')"
+            class="px-4 py-2 rounded-full bg-[#b893b4] hover:bg-[#caa7c6] text-[#0d0b0e] text-xs font-extrabold cursor-pointer">
+            Ganti Semua & Susun Nombor
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: Tambah Kelas Tersuai / Tambah 1 Murid / Pengesahan           -->
+  <!-- ===================================================================== -->
+  <div id="customPromptModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+    <div class="helios-card rounded-3xl w-full max-w-md overflow-hidden">
+      <div class="px-5 py-4 helios-plum-glow text-white flex items-center justify-between border-b border-[#2b242c]">
+        <h3 id="promptModalTitle" class="font-display font-bold text-base">Tambah Kelas</h3>
+        <button onclick="closeCustomPrompt()" class="p-1 rounded-full hover:bg-white/15 text-white cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-3">
+        <p id="promptModalDesc" class="text-xs text-[#c7bcc8]"></p>
+        <input type="text" id="promptModalInput"
+          onkeydown="if(event.key==='Enter') submitCustomPrompt()"
+          class="w-full px-3.5 py-2.5 bg-[#18141a] border border-[#322934] rounded-2xl text-sm font-semibold text-white focus:border-[#b893b4] outline-none" />
+      </div>
+      <div class="px-5 py-3.5 bg-[#141115] border-t border-[#2b242c] flex justify-end gap-2">
+        <button type="button" onclick="closeCustomPrompt()" class="px-4 py-2 rounded-full border border-[#362c39] text-[#c7bcc8] text-xs font-bold hover:bg-[#1f1a21] cursor-pointer">
+          Batal
+        </button>
+        <button type="button" id="promptModalConfirmBtn" onclick="submitCustomPrompt()" class="px-4 py-2 rounded-full bg-[#b893b4] hover:bg-[#caa7c6] text-[#0d0b0e] text-xs font-extrabold cursor-pointer">
+          Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 3: Kemaskini / Nota SP & Tarikh Individu (Jika Perlu)           -->
+  <!-- ===================================================================== -->
+  <div id="spDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+    <div class="helios-card rounded-3xl w-full max-w-lg overflow-hidden">
+      <div class="px-5 py-4 helios-plum-glow text-white flex items-center justify-between border-b border-[#2b242c]">
+        <div>
+          <span id="spModalCode" class="px-2.5 py-0.5 rounded-full bg-[#b893b4]/30 border border-[#b893b4]/50 text-[#eed8ec] text-xs font-bold">SP 1.1.1</span>
+          <h3 id="spModalUnitTitle" class="font-display font-bold text-sm mt-1">Unit 1</h3>
+        </div>
+        <button onclick="closeSpDetailModal()" class="p-1 rounded-full hover:bg-white/15 text-white cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <div>
+          <span class="text-xs font-bold text-[#a599a7] uppercase">Huraian Standard Pembelajaran (DSKP):</span>
+          <p id="spModalDesc" class="mt-1 text-sm text-white bg-[#18141a] p-3 rounded-2xl border border-[#2b242c] leading-relaxed"></p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-[#c7bcc8] mb-1">Tarikh Pentaksiran (Semua Murid):</label>
+            <input type="date" id="spModalDateInput"
+              class="w-full px-3 py-2 bg-[#18141a] border border-[#322934] rounded-2xl text-sm font-semibold text-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#c7bcc8] mb-1">Isi Pantas TP Untuk Semua Murid:</label>
+            <div class="grid grid-cols-6 gap-1">
+              <button type="button" onclick="bulkFillSpTp(1)" class="py-2 rounded-xl bg-[#241d26] hover:bg-[#b893b4] text-[#eed8ec] hover:text-[#0d0b0e] border border-[#3a2f3d] font-bold text-xs cursor-pointer">1</button>
+              <button type="button" onclick="bulkFillSpTp(2)" class="py-2 rounded-xl bg-[#241d26] hover:bg-[#b893b4] text-[#eed8ec] hover:text-[#0d0b0e] border border-[#3a2f3d] font-bold text-xs cursor-pointer">2</button>
+              <button type="button" onclick="bulkFillSpTp(3)" class="py-2 rounded-xl bg-[#241d26] hover:bg-[#b893b4] text-[#eed8ec] hover:text-[#0d0b0e] border border-[#3a2f3d] font-bold text-xs cursor-pointer">3</button>
+              <button type="button" onclick="bulkFillSpTp(4)" class="py-2 rounded-xl bg-[#241d26] hover:bg-[#b893b4] text-[#eed8ec] hover:text-[#0d0b0e] border border-[#3a2f3d] font-bold text-xs cursor-pointer">4</button>
+              <button type="button" onclick="bulkFillSpTp(5)" class="py-2 rounded-xl bg-[#241d26] hover:bg-[#b893b4] text-[#eed8ec] hover:text-[#0d0b0e] border border-[#3a2f3d] font-bold text-xs cursor-pointer">5</button>
+              <button type="button" onclick="bulkFillSpTp(6)" class="py-2 rounded-xl bg-[#241d26] hover:bg-[#b893b4] text-[#eed8ec] hover:text-[#0d0b0e] border border-[#3a2f3d] font-bold text-xs cursor-pointer">6</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="px-5 py-3.5 bg-[#141115] border-t border-[#2b242c] flex justify-between items-center">
+        <button type="button" onclick="bulkFillSpTp('')" class="text-xs font-semibold text-rose-400 hover:underline cursor-pointer">
+          Kosongkan Semua TP SP Ini
+        </button>
+        <button type="button" onclick="saveSpDetailModal()" class="px-4 py-2 rounded-full bg-[#b893b4] hover:bg-[#caa7c6] text-[#0d0b0e] text-xs font-extrabold cursor-pointer">
+          Selesai
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- DATA SILIBUS RBT KSSR SEMAKAN (TAHUN 4, 5 & 6) + LOGIK APLIKASI        -->
+  <!-- ===================================================================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    /**
+     * Pangkalan Data Lengkap Silibus RBT Sekolah Rendah (KSSR Semakan)
+     * Tahun 4, Tahun 5, dan Tahun 6
+     */
+    const RBT_SYLLABUS = {
+      4: [
+        {
+          unitId: "4-U1",
+          unitCode: "BAB / UNIT 1",
+          unitTitle: "KESELAMATAN BENGKEL",
+          color: "bg-emerald-700",
+          sps: [
+            { code: "1.1.1", desc: "Menyatakan peraturan keselamatan diri, bengkel, peralatan dan bahan." },
+            { code: "1.1.2", desc: "Menerangkan maksud simbol dan tanda keselamatan." },
+            { code: "1.1.3", desc: "Mengaplikasikan langkah-langkah yang perlu diambil sekiranya berlaku kemalangan di bengkel." },
+            { code: "1.1.4", desc: "Membincangkan amalan keselamatan di bengkel: (i) Kebersihan bengkel (ii) Penyelenggaraan peralatan." },
+            { code: "1.1.5", desc: "Merumuskan kesan mengabaikan amalan keselamatan di dalam bengkel." }
+          ]
+        },
+        {
+          unitId: "4-U2",
+          unitCode: "BAB / UNIT 2",
+          unitTitle: "PENGENALAN KEPADA REKA BENTUK",
+          color: "bg-teal-700",
+          sps: [
+            { code: "2.1.1", desc: "Menerangkan maksud reka bentuk berdasarkan contoh produk sedia ada." },
+            { code: "2.1.2", desc: "Mengenal pasti kepentingan reka bentuk dalam kehidupan." },
+            { code: "2.1.3", desc: "Membincangkan laluan kerjaya dan pekerjaan dalam reka bentuk." },
+            { code: "2.1.4", desc: "Menghuraikan apresiasi reka bentuk di persekitaran." },
+            { code: "2.1.5", desc: "Memperihalkan penggunaan elemen dalam reka bentuk." },
+            { code: "2.2.1", desc: "Mengenal pasti jenis garisan dalam lakaran reka bentuk." },
+            { code: "2.2.2", desc: "Melakar pelbagai jenis garisan." },
+            { code: "2.2.3", desc: "Menjana idea bagi menghasilkan lakaran dengan menggunakan garisan dan gabungan bentuk asas." },
+            { code: "2.2.4", desc: "Melakar reka bentuk produk menggunakan garisan dan gabungan bentuk asas secara bertema." },
+            { code: "2.2.5", desc: "Menganalisis lakaran reka bentuk produk bertema yang dihasilkan." },
+            { code: "2.2.6", desc: "Menilai lakaran yang dihasilkan dan membuat penambahbaikan." },
+            { code: "2.2.7", desc: "Menghasilkan reka bentuk produk bertema mengikut lakaran yang dibuat menggunakan bahan dan alatan yang sesuai." },
+            { code: "2.2.8", desc: "Membuat persembahan reka bentuk produk bertema yang telah dihasilkan." }
+          ]
+        },
+        {
+          unitId: "4-U3",
+          unitCode: "BAB / UNIT 3",
+          unitTitle: "PENGENALAN KEPADA TEKNOLOGI",
+          color: "bg-cyan-700",
+          sps: [
+            { code: "3.1.1", desc: "Menerangkan teknologi dan kepentingannya kepada kehidupan manusia." },
+            { code: "3.1.2", desc: "Menghuraikan penggunaan teknologi peralatan secara konvensional dan moden dalam menghasilkan produk." },
+            { code: "3.1.3", desc: "Menjana idea bagi menghasilkan lakaran bermaklumat produk yang akan dihasilkan." },
+            { code: "3.1.4", desc: "Membuat lakaran reka bentuk produk bermaklumat yang akan dihasilkan." },
+            { code: "3.1.5", desc: "Menilai maklumat pada lakaran dan membuat penambahbaikan." },
+            { code: "3.1.6", desc: "Mengira kos bahan bagi reka bentuk produk yang akan dihasilkan." },
+            { code: "3.1.7", desc: "Menghasilkan produk dengan menggunakan teknologi yang dipilih." },
+            { code: "3.1.8", desc: "Membentangkan produk yang dihasilkan dengan menggunakan pelbagai media." }
+          ]
+        },
+        {
+          unitId: "4-U4",
+          unitCode: "BAB / UNIT 4",
+          unitTitle: "REKA BENTUK PEMBUNGKUSAN",
+          color: "bg-sky-700",
+          sps: [
+            { code: "4.1.1", desc: "Menghubung kait pembungkusan sedia ada dengan reka bentuk pembungkusan." },
+            { code: "4.1.2", desc: "Menyenaraikan ciri pembungkusan yang baik mengikut kategori produk." },
+            { code: "4.1.3", desc: "Menerangkan kepentingan reka bentuk pembungkusan produk." },
+            { code: "4.1.4", desc: "Menjana idea bagi menghasilkan lakaran bermaklumat reka bentuk pembungkusan yang akan dihasilkan." },
+            { code: "4.1.5", desc: "Membuat lakaran reka bentuk bermaklumat pembungkusan yang akan dihasilkan mengikut kategori produk." },
+            { code: "4.1.6", desc: "Menghuraikan lakaran reka bentuk bermaklumat pembungkusan produk yang akan dihasilkan." },
+            { code: "4.1.7", desc: "Menilai lakaran dan membuat penambahbaikan." },
+            { code: "4.1.8", desc: "Mengira kos bahan bagi reka bentuk pembungkusan produk yang akan dihasilkan." },
+            { code: "4.1.9", desc: "Menghasilkan reka bentuk pembungkusan mengikut lakaran yang dibuat menggunakan bahan dan alatan yang sesuai." },
+            { code: "4.1.10", desc: "Membentangkan produk yang dihasilkan dengan menggunakan pelbagai media." }
+          ]
+        },
+        {
+          unitId: "4-U5",
+          unitCode: "BAB / UNIT 5",
+          unitTitle: "REKA BENTUK MAKANAN",
+          color: "bg-indigo-700",
+          sps: [
+            { code: "5.1.1", desc: "Mengenal pasti reka bentuk yang sesuai pada jenis makanan yang dipilih." },
+            { code: "5.1.2", desc: "Menerangkan kepentingan reka bentuk makanan." },
+            { code: "5.1.3", desc: "Menjana idea bagi menghasilkan lakaran bermaklumat reka bentuk makanan yang akan dihasilkan." },
+            { code: "5.1.4", desc: "Menghasilkan lakaran bermaklumat reka bentuk makanan yang akan dibuat." },
+            { code: "5.1.5", desc: "Menghuraikan lakaran bermaklumat reka bentuk makanan yang akan dihasilkan." },
+            { code: "5.1.6", desc: "Menilai maklumat pada lakaran dan membuat penambahbaikan." },
+            { code: "5.1.7", desc: "Mengira kos bahan bagi reka bentuk makanan yang akan dihasilkan." },
+            { code: "5.1.8", desc: "Menghasilkan satu reka bentuk pada bahan makanan yang dipilih berdasarkan lakaran yang disediakan menggunakan bahan dan alatan yang sesuai." },
+            { code: "5.1.9", desc: "Membentangkan produk yang dihasilkan dengan menggunakan pelbagai media." }
+          ]
+        },
+        {
+          unitId: "4-U6",
+          unitCode: "BAB / UNIT 6",
+          unitTitle: "REKA BENTUK PENGATURCARAAN",
+          color: "bg-slate-700",
+          sps: [
+            { code: "6.1.1", desc: "Menyatakan maksud pengaturcaraan dan kegunaan atur cara dalam perkakasan harian." },
+            { code: "6.1.2", desc: "Mengenal pasti algoritma iaitu pseudokod dan carta alir." },
+            { code: "6.1.3", desc: "Menulis pseudokod dan melukis carta alir struktur kawalan jujukan dalam situasi ringkas." },
+            { code: "6.1.4", desc: "Menghuraikan satu masalah menggunakan pseudokod dan carta alir." },
+            { code: "6.1.5", desc: "Menilai dan membuat penambahbaikan pseudokod dan carta alir yang dihasilkan." },
+            { code: "6.1.6", desc: "Merumuskan pseudokod dan carta alir yang telah dihasilkan." },
+            { code: "6.2.1", desc: "Mengenal pasti fitur-fitur pada antara muka perisian pengaturcaraan." },
+            { code: "6.2.2", desc: "Menggunakan fitur-fitur untuk menggerakkan objek, memasukkan dialog, bunyi dan objek baharu dalam perisian pengaturcaraan." },
+            { code: "6.2.3", desc: "Membina atur cara struktur kawalan jujukan menggunakan fitur-fitur yang sesuai untuk sesuatu objek: (i) Melakukan pergerakan dari kedudukan A ke kedudukan B dengan kadar kelajuan berbeza (ii) Memaparkan dialog yang sesuai (iii) Mengeluarkan bunyi yang sesuai." },
+            { code: "6.2.4", desc: "Menjalankan atur cara yang dibina dan membaiki ralat sekiranya ada." },
+            { code: "6.2.5", desc: "Menghasilkan satu atur cara baharu menggunakan fitur-fitur yang bersesuaian dalam perisian pengaturcaraan." },
+            { code: "6.2.6", desc: "Membentangkan secara lisan penghasilan atur cara baharu dalam perisian pengaturcaraan." }
+          ]
+        }
+      ],
+      5: [
+        {
+          unitId: "5-U1",
+          unitCode: "BAB / UNIT 1",
+          unitTitle: "TEKNOLOGI RUMAH TANGGA",
+          color: "bg-emerald-700",
+          sps: [
+            { code: "4.3.1", desc: "Mengenal pasti jenis mata jahitan tangan pada artikel jahitan." },
+            { code: "4.3.2", desc: "Menerangkan fungsi alatan jahitan." },
+            { code: "4.3.3", desc: "Mereka bentuk artikel jahitan secara lakaran berpandukan gabungan beberapa mata jahitan." },
+            { code: "4.3.4", desc: "Menilai lakaran yang dipilih dan membuat penambahbaikan." },
+            { code: "4.3.5", desc: "Mengira dan membuat anggaran kos bahan bagi menghasilkan artikel jahitan." },
+            { code: "4.3.6", desc: "Menghasilkan artikel jahitan dengan menggunakan alatan dan bahan yang sesuai." },
+            { code: "4.3.7", desc: "Membentangkan artikel jahitan yang telah dihasilkan." }
+          ]
+        },
+        {
+          unitId: "5-U2",
+          unitCode: "BAB / UNIT 2",
+          unitTitle: "APLIKASI REKA BENTUK TEKNOLOGI KEJURUTERAAN",
+          color: "bg-teal-700",
+          sps: [
+            { code: "5.1.1", desc: "Mengenal pasti sistem asas elektromekanikal." },
+            { code: "5.1.2", desc: "Menerangkan sistem asas elektromekanikal." },
+            { code: "5.1.3", desc: "Menjana idea bagi menghasilkan lakaran bermaklumat reka bentuk produk yang menggunakan sistem asas elektromekanikal." },
+            { code: "5.1.4", desc: "Menilai lakaran yang dipilih untuk membuat penambahbaikan." },
+            { code: "5.1.5", desc: "Membuat anggaran kos bagi menghasilkan reka bentuk produk yang menggunakan sistem asas elektromekanikal." },
+            { code: "5.1.6", desc: "Menghasilkan reka bentuk produk yang menggunakan sistem asas elektromekanikal." },
+            { code: "5.1.7", desc: "Membentangkan produk yang menggunakan sistem asas elektromekanikal." }
+          ]
+        },
+        {
+          unitId: "5-U3",
+          unitCode: "BAB / UNIT 3",
+          unitTitle: "REKA BENTUK PENGATURCARAAN",
+          color: "bg-cyan-700",
+          sps: [
+            { code: "6.3.1", desc: "Menyatakan struktur kawalan pilihan dan ulangan dalam pengaturcaraan." },
+            { code: "6.3.2", desc: "Menghuraikan struktur kawalan pilihan dan ulangan dalam algoritma dengan menggunakan kaedah pseudokod dan carta alir." },
+            { code: "6.3.3", desc: "Menghasilkan pseudokod dan carta alir berdasarkan situasi yang diberi." },
+            { code: "6.3.4", desc: "Membina atur cara yang menggunakan struktur kawalan pilihan dan ulangan." },
+            { code: "6.3.5", desc: "Menilai atur cara yang dihasilkan dan membaiki ralat." },
+            { code: "6.3.6", desc: "Membentangkan atur cara yang telah dibina." },
+            { code: "6.4.1", desc: "Mengenal pasti fitur-fitur pada antara muka perisian pengaturcaraan." },
+            { code: "6.4.2", desc: "Menghuraikan perkakasan yang akan digunakan bersama perisian pengaturcaraan." },
+            { code: "6.4.3", desc: "Menghasilkan carta alir kawalan perkakasan yang mengeluarkan cahaya, bunyi dan pergerakan." },
+            { code: "6.4.4", desc: "Membina atur cara yang dikehendaki berpandukan carta alir yang dibuat." },
+            { code: "6.4.5", desc: "Menghasilkan sambungan perkakasan yang mengeluarkan cahaya, bunyi dan pergerakan." },
+            { code: "6.4.6", desc: "Memindahkan atur cara yang telah dibina pada perkakasan dan menguji kefungsiannya." },
+            { code: "6.4.7", desc: "Membentangkan atur cara yang telah dihasilkan." }
+          ]
+        },
+        {
+          unitId: "5-U4",
+          unitCode: "BAB / UNIT 4",
+          unitTitle: "REKA BENTUK PERTANIAN BANDAR",
+          color: "bg-sky-700",
+          sps: [
+            { code: "7.1.1", desc: "Menerangkan maksud pertanian bandar." },
+            { code: "7.1.2", desc: "Menjelaskan sistem takungan dalam pertanian bandar." },
+            { code: "7.1.3", desc: "Menjana idea bagi menghasilkan lakaran bermaklumat reka bentuk sistem takungan." },
+            { code: "7.1.4", desc: "Menilai lakaran yang dipilih untuk membuat penambahbaikan." },
+            { code: "7.1.5", desc: "Membuat anggaran kos bagi menghasilkan reka bentuk sistem takungan." },
+            { code: "7.1.6", desc: "Menghasilkan reka bentuk sistem takungan berdasarkan lakaran yang dipilih." },
+            { code: "7.1.7", desc: "Membentangkan reka bentuk sistem takungan yang telah dihasilkan." }
+          ]
+        }
+      ],
+      6: [
+        {
+          unitId: "6-U1",
+          unitCode: "BAB / UNIT 1",
+          unitTitle: "REKA BENTUK PRODUK ELEKTROMEKANIKAL",
+          color: "bg-emerald-700",
+          sps: [
+            { code: "5.2.1", desc: "Menyatakan elemen elektromekanikal." },
+            { code: "5.2.2", desc: "Menerangkan elemen elektromekanikal." },
+            { code: "5.2.3", desc: "Melakar reka bentuk produk elektromekanikal yang akan dihasilkan." },
+            { code: "5.2.4", desc: "Menilai lakaran yang dipilih untuk membuat penambahbaikan." },
+            { code: "5.2.5", desc: "Membuat produk berdasarkan lakaran dengan menggunakan bahan dan peralatan yang sesuai." },
+            { code: "5.2.6", desc: "Membentangkan produk yang dihasilkan." }
+          ]
+        },
+        {
+          unitId: "6-U2",
+          unitCode: "BAB / UNIT 2",
+          unitTitle: "PENGENALAN ASAS SISTEM ROBOTIK",
+          color: "bg-teal-700",
+          sps: [
+            { code: "6.5.1", desc: "Menyatakan elemen sistem robotik." },
+            { code: "6.5.2", desc: "Menghuraikan elemen sistem robotik." },
+            { code: "6.5.3", desc: "Menjelaskan pemasangan perkakasan pada reka bentuk sebuah robot." },
+            { code: "6.5.4", desc: "Melakar reka bentuk produk yang mempunyai elemen sistem robotik." },
+            { code: "6.5.5", desc: "Menilai lakaran yang dipilih untuk membuat penambahbaikan." },
+            { code: "6.5.6", desc: "Menghasilkan carta alir atur cara sebuah robot yang akan dibina." },
+            { code: "6.5.7", desc: "Menghasilkan atur cara yang dikehendaki berpandukan carta alir yang dibuat." },
+            { code: "6.5.8", desc: "Membina reka bentuk produk dan penyambungan perkakasan berdasarkan lakaran yang dibuat menggunakan peralatan yang sesuai." },
+            { code: "6.5.9", desc: "Memindahkan atur cara yang telah dihasilkan pada perkakasan dan menguji kefungsiannya." },
+            { code: "6.5.10", desc: "Membuat rumusan dan membentangkan produk yang telah dibina." }
+          ]
+        },
+        {
+          unitId: "6-U3",
+          unitCode: "BAB / UNIT 3",
+          unitTitle: "PENGHASILAN PRODUK",
+          color: "bg-cyan-700",
+          sps: [
+            { code: "8.1.1", desc: "Menyatakan produk yang hendak dibina berdasarkan situasi." },
+            { code: "8.1.2", desc: "Menghuraikan gabungan asas teknologi yang sesuai digunakan dengan reka bentuk produk yang akan dibina." },
+            { code: "8.1.3", desc: "Melakar reka bentuk produk yang hendak dibina." },
+            { code: "8.1.4", desc: "Menilai dan membuat penambahbaikan pada lakaran yang dipilih." },
+            { code: "8.1.5", desc: "Menyediakan senarai peralatan, bahan, anggaran kos dan jadual kerja." },
+            { code: "8.1.6", desc: "Membina produk berfungsi berdasarkan lakaran yang dibuat." },
+            { code: "8.1.7", desc: "Membuat dokumentasi mudah proses penghasilan produk dan pembentangan secara kreatif menggunakan pelbagai media." }
+          ]
+        }
+      ]
+    };
+
+    const DEFAULT_CLASSES = ["Alfa", "Beta", "Delta", "Gamma", "Sigma", "Omega", "Zeta"];
+
+    // Konfigurasi Cloud Storage Kekal
+    const appId = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
+    const firebaseConfig = typeof __firebase_config !== "undefined" ? JSON.parse(__firebase_config) : null;
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    let authReadyPromise = null;
+    let activeTeacherAccountId = null;
+    let isGuestMode = false;
+    let unsubscribeRecordListener = null;
+    let authMode = "login"; // 'login' | 'register'
+    let saveDebounceTimer = null;
+    let isRemoteSyncing = false;
+    let hasUnsavedChanges = false;
+    // Keadaan Utama Aplikasi
+    let appState = {
+      teacherName: "",
+      academicSession: "2026",
+      selectedYear: 4,
+      selectedClass: "Alfa",
+      selectedUnitFilter: "ALL",
+      customClasses: [],
+      records: {}
+    };
+
+    // Pembolehubah sementara untuk modal
+    let currentPromptType = null;
+    let activeSpModalCode = null;
+
+    // Jam Masa Nyata (Waktu & Tarikh Malaysia)
+    function startLiveClock() {
+      const timeEl = document.getElementById("liveClockTime");
+      const dateEl = document.getElementById("liveClockDate");
+      if (!timeEl || !dateEl) return;
+
+      const tick = () => {
+        const now = new Date();
+        timeEl.textContent = now.toLocaleTimeString("ms-MY", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true
+        }).toUpperCase();
+        dateEl.textContent = now.toLocaleDateString("ms-MY", {
+          weekday: "short",
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        });
+      };
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    // Mulakan pengesahan latar belakang apabila halaman dimuatkan
+    window.addEventListener("DOMContentLoaded", () => {
+      initTheme();
+      startLiveClock();
+      if (firebaseConfig) {
+        try {
+          const app = initializeApp(firebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
+
+          authReadyPromise = new Promise((resolve) => {
+            onAuthStateChanged(auth, async (user) => {
+              if (user) {
+                currentUser = user;
+                resolve(user);
+              } else {
+                try {
+                  if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+                    const cred = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = cred.user;
+                  } else {
+                    const cred = await signInAnonymously(auth);
+                    currentUser = cred.user;
+                  }
+                } catch (err) {
+                  console.error("Ralat pengesahan:", err);
+                }
+                resolve(currentUser);
+              }
+            });
+          });
+        } catch (err) {
+          console.error("Ralat inisialisasi storan awan:", err);
+          authReadyPromise = Promise.resolve(null);
+        }
+      } else {
+        authReadyPromise = Promise.resolve(null);
+      }
+
+      // Semak sesi terakhir dalam pelayar
+      const savedGuest = localStorage.getItem("rbt_pbd_guest_session");
+      const savedAccount = localStorage.getItem("rbt_pbd_active_account");
+      if (savedAccount) {
+        try {
+          const parsed = JSON.parse(savedAccount);
+          if (parsed && parsed.id && parsed.pin) {
+            resumeTeacherAccount(parsed.id, parsed.pin);
+            return;
+          }
+        } catch (_) {}
+      } else if (savedGuest) {
+        try {
+          const parsedGuest = JSON.parse(savedGuest);
+          if (parsedGuest && parsedGuest.teacherName) {
+            document.getElementById("guestTeacherNameInput").value = parsedGuest.teacherName;
+            enterGuestMode(true);
+            return;
+          }
+        } catch (_) {}
+      }
+
+      renderYearButtons();
+      renderClassButtons();
+      renderUnitFilters();
+      renderPBDTable();
+    });
+
+    // ==================== SISTEM KUNCI AKAUN & MOD TANPA AKAUN ====================
+
+    function switchAuthMode(mode) {
+      authMode = mode;
+      const loginTab = document.getElementById("tabLoginBtn");
+      const regTab = document.getElementById("tabRegisterBtn");
+      const nameGroup = document.getElementById("registerFullNameGroup");
+      const submitBtn = document.getElementById("authSubmitBtn");
+      const errBox = document.getElementById("authErrorBox");
+
+      errBox.classList.add("hidden");
+      errBox.textContent = "";
+
+      if (mode === "register") {
+        regTab.className = "py-3 text-xs font-extrabold uppercase tracking-wider border-b-2 border-[#b893b4] text-white bg-[#1e1920] cursor-pointer transition";
+        loginTab.className = "py-3 text-xs font-extrabold uppercase tracking-wider border-b-2 border-transparent text-[#8c7f8e] hover:text-white cursor-pointer transition";
+        nameGroup.classList.remove("hidden");
+        document.getElementById("authFullName").required = true;
+        submitBtn.textContent = "Daftar Akaun & Kunci Rekod Saya";
+      } else {
+        loginTab.className = "py-3 text-xs font-extrabold uppercase tracking-wider border-b-2 border-[#b893b4] text-white bg-[#1e1920] cursor-pointer transition";
+        regTab.className = "py-3 text-xs font-extrabold uppercase tracking-wider border-b-2 border-transparent text-[#8c7f8e] hover:text-white cursor-pointer transition";
+        nameGroup.classList.add("hidden");
+        document.getElementById("authFullName").required = false;
+        submitBtn.textContent = "Buka Kunci & Masuk ke Rekod Saya";
+      }
+    }
+
+    function showAuthError(msg) {
+      const errBox = document.getElementById("authErrorBox");
+      errBox.textContent = msg;
+      errBox.classList.remove("hidden");
+    }
+
+    function normalizeAccountId(rawId) {
+      return rawId.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "_");
+    }
+
+    async function hashPin(pin) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode("RBT_PBD_SALT_" + pin.trim());
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function handleAuthSubmit(event) {
+      event.preventDefault();
+      const rawId = document.getElementById("authTeacherId").value;
+      const rawPin = document.getElementById("authTeacherPin").value;
+      const rawFullName = document.getElementById("authFullName").value;
+
+      if (!rawId.trim() || !rawPin.trim()) {
+        showAuthError("Sila masukkan ID Pengguna dan Kata Laluan / PIN anda.");
+        return;
+      }
+
+      const normId = normalizeAccountId(rawId);
+      const pinHash = await hashPin(rawPin);
+      const submitBtn = document.getElementById("authSubmitBtn");
+      const origText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Mengesahkan akses...";
+
+      try {
+        if (authReadyPromise) await authReadyPromise;
+
+        if (authMode === "register") {
+          if (!rawFullName.trim()) {
+            showAuthError("Sila masukkan Nama Penuh Guru untuk pendaftaran.");
+            return;
+          }
+
+          if (db && currentUser) {
+            const accRef = doc(db, "artifacts", appId, "public", "data", "rbt_teacher_accounts", normId);
+            const accSnap = await getDoc(accRef);
+            if (accSnap.exists()) {
+              showAuthError("ID Pengguna ini telah didaftarkan. Sila guna ID lain atau klik tab Log Masuk Akaun.");
+              return;
+            }
+
+            const initialState = {
+              teacherName: rawFullName.trim(),
+              academicSession: "2026",
+              selectedYear: 4,
+              selectedClass: "Alfa",
+              selectedUnitFilter: "ALL",
+              customClasses: [],
+              records: {}
+            };
+
+            await setDoc(accRef, {
+              accountId: normId,
+              pinHash: pinHash,
+              teacherName: rawFullName.trim(),
+              updatedAt: Date.now()
+            });
+
+            const recRef = doc(db, "artifacts", appId, "public", "data", "rbt_teacher_records", normId);
+            await setDoc(recRef, {
+              pinHash: pinHash,
+              stateJson: JSON.stringify(initialState),
+              updatedAt: Date.now()
+            });
+
+            localStorage.setItem("rbt_pbd_local_acc_" + normId, JSON.stringify({ pinHash, state: initialState }));
+            unlockWorkspaceWithAccount(normId, pinHash, initialState);
+            showToast("Akaun guru berjaya didaftarkan dan dikunci!", "success");
+          } else {
+            const existingLocal = localStorage.getItem("rbt_pbd_local_acc_" + normId);
+            if (existingLocal) {
+              showAuthError("ID Pengguna ini sudah wujud di peranti ini. Sila log masuk.");
+              return;
+            }
+            const initialState = {
+              teacherName: rawFullName.trim(),
+              academicSession: "2026",
+              selectedYear: 4,
+              selectedClass: "Alfa",
+              selectedUnitFilter: "ALL",
+              customClasses: [],
+              records: {}
+            };
+            localStorage.setItem("rbt_pbd_local_acc_" + normId, JSON.stringify({ pinHash, state: initialState }));
+            unlockWorkspaceWithAccount(normId, pinHash, initialState);
+            showToast("Akaun guru berjaya didaftarkan!", "success");
+          }
+        } else {
+          await resumeTeacherAccount(normId, pinHash, true);
+        }
+      } catch (err) {
+        console.error("Ralat log masuk:", err);
+        showAuthError("Ralat sambungan semasa mengesahkan akaun. Sila cuba lagi.");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = origText;
+      }
+    }
+
+    async function resumeTeacherAccount(normId, pinHash, showErrorOnFail = false) {
+      if (authReadyPromise) await authReadyPromise;
+
+      if (db && currentUser) {
+        try {
+          const accRef = doc(db, "artifacts", appId, "public", "data", "rbt_teacher_accounts", normId);
+          const accSnap = await getDoc(accRef);
+
+          if (!accSnap.exists()) {
+            if (showErrorOnFail) showAuthError("ID Pengguna tidak ditemui. Sila daftar akaun baharu terlebih dahulu.");
+            localStorage.removeItem("rbt_pbd_active_account");
+            return;
+          }
+
+          const accData = accSnap.data();
+          if (accData.pinHash !== pinHash) {
+            if (showErrorOnFail) showAuthError("Kata Laluan / PIN salah! Akses ditolak.");
+            localStorage.removeItem("rbt_pbd_active_account");
+            return;
+          }
+
+          const recRef = doc(db, "artifacts", appId, "public", "data", "rbt_teacher_records", normId);
+          const recSnap = await getDoc(recRef);
+          let loadedState = {
+            teacherName: accData.teacherName || "",
+            academicSession: "2026",
+            selectedYear: 4,
+            selectedClass: "Alfa",
+            selectedUnitFilter: "ALL",
+            customClasses: [],
+            records: {}
+          };
+
+          if (recSnap.exists() && recSnap.data().stateJson) {
+            loadedState = { ...loadedState, ...JSON.parse(recSnap.data().stateJson) };
+          }
+
+          unlockWorkspaceWithAccount(normId, pinHash, loadedState);
+          if (showErrorOnFail) showToast(`Selamat kembali, ${loadedState.teacherName || normId}!`, "success");
+          return;
+        } catch (err) {
+          console.error("Ralat muat turun akaun awan:", err);
+        }
+      }
+
+      // Sandaran tempatan jika mod luar talian
+      const localRaw = localStorage.getItem("rbt_pbd_local_acc_" + normId);
+      if (!localRaw) {
+        if (showErrorOnFail) showAuthError("ID Pengguna tidak ditemui. Sila daftar akaun baharu.");
+        return;
+      }
+      const parsed = JSON.parse(localRaw);
+      if (parsed.pinHash !== pinHash) {
+        if (showErrorOnFail) showAuthError("Kata Laluan / PIN salah! Akses ditolak.");
+        return;
+      }
+      unlockWorkspaceWithAccount(normId, pinHash, parsed.state);
+      if (showErrorOnFail) showToast("Log masuk berjaya!", "success");
+    }
+
+    function unlockWorkspaceWithAccount(normId, pinHash, loadedState) {
+      isGuestMode = false;
+      activeTeacherAccountId = normId;
+      localStorage.setItem("rbt_pbd_active_account", JSON.stringify({ id: normId, pin: pinHash }));
+      localStorage.removeItem("rbt_pbd_guest_session");
+
+      appState = {
+        teacherName: loadedState.teacherName || "",
+        academicSession: loadedState.academicSession || "2026",
+        selectedYear: Number(loadedState.selectedYear) || 4,
+        selectedClass: loadedState.selectedClass || "Alfa",
+        selectedUnitFilter: loadedState.selectedUnitFilter || "ALL",
+        customClasses: Array.isArray(loadedState.customClasses) ? loadedState.customClasses : [],
+        records: loadedState.records || {}
+      };
+
+      document.getElementById("teacherName").value = appState.teacherName;
+      document.getElementById("academicSession").value = appState.academicSession;
+      document.getElementById("logoutBtnText").textContent = "Simpan & Log Keluar";
+      document.getElementById("authGateScreen").classList.add("hidden");
+
+      updateSaveStatus("saved", "Kekal tersimpan (Akaun Berkunci)");
+      renderYearButtons();
+      renderClassButtons();
+      renderUnitFilters();
+      renderPBDTable();
+
+      // Dengar perubahan masa nyata untuk akaun ini
+      if (unsubscribeRecordListener) unsubscribeRecordListener();
+      if (db && currentUser) {
+        const recRef = doc(db, "artifacts", appId, "public", "data", "rbt_teacher_records", normId);
+        unsubscribeRecordListener = onSnapshot(recRef, (snap) => {
+          if (snap.exists() && snap.data().stateJson && !hasUnsavedChanges) {
+            try {
+              const remote = JSON.parse(snap.data().stateJson);
+              appState = { ...appState, ...remote };
+              document.getElementById("teacherName").value = appState.teacherName || "";
+              document.getElementById("academicSession").value = appState.academicSession || "2026";
+              renderYearButtons();
+              renderClassButtons();
+              renderUnitFilters();
+              renderPBDTable();
+            } catch (_) {}
+          }
+        }, (err) => console.error("Snapshot error:", err));
+      }
+    }
+
+    function enterGuestMode(isAutoResume = false) {
+      const nameInput = document.getElementById("guestTeacherNameInput");
+      const teacherName = nameInput ? nameInput.value.trim() : "";
+
+      if (!teacherName) {
+        showAuthError("Sila masukkan Nama Penuh Guru untuk terus masuk tanpa akaun.");
+        if (nameInput) nameInput.focus();
+        return;
+      }
+
+      isGuestMode = true;
+      activeTeacherAccountId = null;
+      localStorage.removeItem("rbt_pbd_active_account");
+
+      const guestStorageKey = "rbt_pbd_guest_data_v1";
+      const existingGuestRaw = localStorage.getItem(guestStorageKey);
+      let loadedState = {
+        teacherName: teacherName,
+        academicSession: "2026",
+        selectedYear: 4,
+        selectedClass: "Alfa",
+        selectedUnitFilter: "ALL",
+        customClasses: [],
+        records: {}
+      };
+
+      if (existingGuestRaw) {
+        try {
+          const parsed = JSON.parse(existingGuestRaw);
+          loadedState = { ...loadedState, ...parsed, teacherName: teacherName };
+        } catch (_) {}
+      }
+
+      appState = loadedState;
+      localStorage.setItem("rbt_pbd_guest_session", JSON.stringify({ teacherName }));
+      localStorage.setItem(guestStorageKey, JSON.stringify(appState));
+
+      document.getElementById("teacherName").value = appState.teacherName;
+      document.getElementById("academicSession").value = appState.academicSession;
+      document.getElementById("logoutBtnText").textContent = "Tukar Pengguna";
+      document.getElementById("authGateScreen").classList.add("hidden");
+
+      updateSaveStatus("saved", "Kekal tersimpan (Peranti Ini)");
+      renderYearButtons();
+      renderClassButtons();
+      renderUnitFilters();
+      renderPBDTable();
+
+      if (!isAutoResume) {
+        showToast(`Selamat datang, ${teacherName}!`, "success");
+      }
+    }
+
+    async function logoutTeacher() {
+      if (saveDebounceTimer) {
+        clearTimeout(saveDebounceTimer);
+        saveDebounceTimer = null;
+      }
+      await persistNow();
+
+      if (unsubscribeRecordListener) {
+        unsubscribeRecordListener();
+        unsubscribeRecordListener = null;
+      }
+
+      activeTeacherAccountId = null;
+      isGuestMode = false;
+      localStorage.removeItem("rbt_pbd_active_account");
+      localStorage.removeItem("rbt_pbd_guest_session");
+
+      document.getElementById("authTeacherPin").value = "";
+      document.getElementById("authErrorBox").classList.add("hidden");
+      document.getElementById("authGateScreen").classList.remove("hidden");
+      showToast("Rekod disimpan & skrin telah dikunci.", "info");
+    }
+
+    // ==================== PENYIMPANAN KEKAL AUTOMATIK ====================
+
+    function updateSaveStatus(status, customText) {
+      const dot = document.getElementById("saveStatusDot");
+      const text = document.getElementById("saveStatusText");
+      if (!dot || !text) return;
+
+      if (status === "saving") {
+        dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
+        text.textContent = customText || "Menyimpan perubahan...";
+      } else if (status === "error") {
+        dot.className = "w-2 h-2 rounded-full bg-rose-500";
+        text.textContent = customText || "Ralat simpanan";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+        text.textContent = customText || "Kekal tersimpan";
+      }
+    }
+
+    function savePersistentState() {
+      hasUnsavedChanges = true;
+      updateSaveStatus("saving", "Menyimpan...");
+
+      if (isGuestMode) {
+        localStorage.setItem("rbt_pbd_guest_data_v1", JSON.stringify(appState));
+        localStorage.setItem("rbt_pbd_guest_session", JSON.stringify({ teacherName: appState.teacherName }));
+      } else if (activeTeacherAccountId) {
+        const savedAcc = localStorage.getItem("rbt_pbd_active_account");
+        const pinHash = savedAcc ? JSON.parse(savedAcc).pin : "";
+        localStorage.setItem("rbt_pbd_local_acc_" + activeTeacherAccountId, JSON.stringify({ pinHash, state: appState }));
+      }
+
+      if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+      saveDebounceTimer = setTimeout(() => {
+        persistNow();
+      }, 450);
+    }
+
+    async function persistNow() {
+      if (isGuestMode) {
+        localStorage.setItem("rbt_pbd_guest_data_v1", JSON.stringify(appState));
+        hasUnsavedChanges = false;
+        updateSaveStatus("saved", "Kekal tersimpan (Peranti Ini)");
+        return;
+      }
+
+      if (!activeTeacherAccountId) return;
+
+      try {
+        if (db && currentUser) {
+          const savedAcc = localStorage.getItem("rbt_pbd_active_account");
+          const pinHash = savedAcc ? JSON.parse(savedAcc).pin : "";
+          const recRef = doc(db, "artifacts", appId, "public", "data", "rbt_teacher_records", activeTeacherAccountId);
+          await setDoc(recRef, {
+            pinHash: pinHash,
+            stateJson: JSON.stringify(appState),
+            updatedAt: Date.now()
+          }, { merge: true });
+        }
+        hasUnsavedChanges = false;
+        updateSaveStatus("saved", "Kekal tersimpan");
+      } catch (err) {
+        console.error("Ralat simpan ke awan:", err);
+        hasUnsavedChanges = false;
+        updateSaveStatus("saved", "Tersimpan secara tempatan");
+      }
+    }
+
+    // ==================== KAWALAN MAKLUMAT GURU, TAHUN & KELAS ====================
+
+    function getCurrentClassKey() {
+      return `${appState.selectedYear}_${appState.selectedClass}`;
+    }
+
+    function getCurrentClassData() {
+      const key = getCurrentClassKey();
+      if (!appState.records[key]) {
+        appState.records[key] = {
+          students: [],
+          spDates: {}
+        };
+      }
+      return appState.records[key];
+    }
+
+    function handleTeacherInfoChange() {
+      appState.teacherName = document.getElementById("teacherName").value;
+      appState.academicSession = document.getElementById("academicSession").value;
+      savePersistentState();
+    }
+
+    function selectYear(year) {
+      appState.selectedYear = Number(year);
+      appState.selectedUnitFilter = "ALL";
+      savePersistentState();
+      renderYearButtons();
+      renderUnitFilters();
+      renderPBDTable();
+    }
+
+    function selectClass(className) {
+      appState.selectedClass = className;
+      savePersistentState();
+      renderClassButtons();
+      renderPBDTable();
+    }
+
+    function selectUnitFilter(unitId) {
+      appState.selectedUnitFilter = unitId;
+      savePersistentState();
+      renderUnitFilters();
+      renderPBDTable();
+    }
+
+    function renderYearButtons() {
+      const buttons = document.querySelectorAll(".year-btn");
+      buttons.forEach(btn => {
+        const y = Number(btn.getAttribute("data-year"));
+        if (y === appState.selectedYear) {
+          btn.className = "year-btn py-2.5 px-4 rounded-full font-extrabold text-sm border helios-pill-active shadow-xs transition cursor-pointer flex items-center justify-center gap-2";
+        } else {
+          btn.className = "year-btn py-2.5 px-4 rounded-full font-bold text-sm border border-[#2f2731] bg-[#161218] text-[#b8adb9] hover:border-[#b893b4]/60 hover:text-white transition cursor-pointer flex items-center justify-center gap-2";
+        }
+      });
+    }
+
+    function renderClassButtons() {
+      const container = document.getElementById("classSelectorGroup");
+      const allClasses = [...DEFAULT_CLASSES, ...(appState.customClasses || [])];
+      container.innerHTML = allClasses.map(cls => {
+        const isActive = cls === appState.selectedClass;
+        const activeClasses = isActive
+          ? "helios-pill-active font-extrabold shadow-xs"
+          : "bg-[#161218] text-[#b8adb9] border-[#2f2731] hover:border-[#b893b4]/60 hover:text-white font-semibold";
+        return `
+          <button type="button" onclick="selectClass('${escapeHtml(cls)}')"
+            class="px-4 py-2 rounded-full text-xs sm:text-sm border transition cursor-pointer ${activeClasses}">
+            ${escapeHtml(cls)}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderUnitFilters() {
+      const container = document.getElementById("unitFilterGroup");
+      const units = RBT_SYLLABUS[appState.selectedYear] || [];
+      const isAll = appState.selectedUnitFilter === "ALL";
+
+      let html = `
+        <button type="button" onclick="selectUnitFilter('ALL')"
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+            isAll
+              ? "helios-pill-active shadow-xs"
+              : "bg-[#161218] text-[#b8adb9] border-[#2f2731] hover:border-[#b893b4]/60 hover:text-white"
+          }">
+          Semua Bab (${units.length} Unit)
+        </button>
+      `;
+
+      units.forEach((u, idx) => {
+        const active = appState.selectedUnitFilter === u.unitId;
+        html += `
+          <button type="button" onclick="selectUnitFilter('${u.unitId}')"
+            class="px-3.5 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+              active
+                ? "helios-pill-active shadow-xs"
+                : "bg-[#161218] text-[#b8adb9] border-[#2f2731] hover:border-[#b893b4]/60 hover:text-white"
+            }">
+            Bab ${idx + 1}: ${escapeHtml(u.unitTitle)}
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function getFilteredUnits() {
+      const units = RBT_SYLLABUS[appState.selectedYear] || [];
+      if (appState.selectedUnitFilter === "ALL") return units;
+      return units.filter(u => u.unitId === appState.selectedUnitFilter);
+    }
+
+    /**
+     * Penjanaan Jadual Matriks PBD Utama (Hitam Putih Rasmi)
+     */
+    function renderPBDTable() {
+      const classData = getCurrentClassData();
+      const students = classData.students || [];
+      const spDates = classData.spDates || {};
+      const units = getFilteredUnits();
+
+      // Kira jumlah SP keseluruhan tahun ini
+      const allYearUnits = RBT_SYLLABUS[appState.selectedYear] || [];
+      const totalYearSPs = allYearUnits.reduce((sum, u) => sum + u.sps.length, 0);
+
+      // Kemaskini paparan ringkasan
+      const activeTitle = `Tahun ${appState.selectedYear} ${appState.selectedClass}`;
+      document.getElementById("activeClassBadge").textContent = `Kelas Aktif: ${activeTitle}`;
+      document.getElementById("tableBannerTitle").textContent = `REKOD PENTAKSIRAN BILIK DARJAH (PBD) — RBT ${activeTitle.toUpperCase()}`;
+      document.getElementById("studentCountDisplay").textContent = students.length;
+      document.getElementById("spCountDisplay").textContent = totalYearSPs;
+
+      const wrapper = document.getElementById("pbdTableWrapper");
+
+      // Kumpulkan semua lajur SP yang ditapis
+      const flattenedSps = [];
+      units.forEach(u => {
+        u.sps.forEach(sp => {
+          flattenedSps.push({ ...sp, unitId: u.unitId, unitTitle: u.unitTitle, unitCode: u.unitCode });
+        });
+      });
+
+      let html = `<table class="min-w-full border-collapse text-xs select-none bg-white text-slate-900">`;
+
+      // ==================== BARIS KEPALA 1: BAB / UNIT (TANPA WARNA) ====================
+      html += `<thead>`;
+      html += `<tr>`;
+      html += `<th rowspan="3" class="sticky left-0 top-0 z-30 bg-white text-slate-900 font-extrabold px-3 py-3 border border-slate-400 w-12 min-w-[48px] text-center">BIL</th>`;
+      html += `<th rowspan="3" class="sticky left-[48px] top-0 z-30 bg-white text-slate-900 font-extrabold px-3.5 py-3 border border-slate-400 min-w-[230px] max-w-[280px] text-left sticky-col-shadow">NAMA PENUH MURID</th>`;
+
+      units.forEach(unit => {
+        html += `
+          <th colspan="${unit.sps.length}" class="bg-white text-slate-900 font-display font-extrabold px-3 py-2.5 border border-slate-400 text-center tracking-wide">
+            <div class="text-[11px] text-slate-600 uppercase">${escapeHtml(unit.unitCode)}</div>
+            <div class="text-xs sm:text-sm">${escapeHtml(unit.unitTitle)}</div>
+          </th>
+        `;
+      });
+
+      html += `<th rowspan="3" class="bg-white text-slate-900 font-extrabold px-3 py-3 border border-slate-400 min-w-[90px] text-center">PURATA TP</th>`;
+      html += `<th rowspan="3" class="bg-white text-slate-900 font-extrabold px-2.5 py-3 border border-slate-400 w-16 text-center no-print">AKSI</th>`;
+      html += `</tr>`;
+
+      // ==================== BARIS KEPALA 2: KOD SP (TANPA WARNA) ====================
+      html += `<tr>`;
+      flattenedSps.forEach(sp => {
+        html += `
+          <th onclick="openSpDetailModal('${sp.code}')" title="Klik untuk lihat huraian SP & isi pantas TP: ${escapeHtml(sp.desc)}"
+            class="bg-white hover:bg-slate-100 text-slate-900 font-bold px-2 py-2 border border-slate-400 min-w-[96px] text-center cursor-pointer transition group">
+            <div class="flex items-center justify-center gap-1">
+              <span>SP ${escapeHtml(sp.code)}</span>
+              <svg class="w-3 h-3 text-slate-500 group-hover:text-slate-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="text-[10px] font-normal text-slate-600 line-clamp-1 max-w-[92px] mx-auto mt-0.5">${escapeHtml(sp.desc)}</div>
+          </th>
+        `;
+      });
+      html += `</tr>`;
+
+      // ==================== BARIS KEPALA 3: TARIKH SP (TANPA WARNA) ====================
+      html += `<tr>`;
+      flattenedSps.forEach(sp => {
+        const currentDate = spDates[sp.code] || "";
+        html += `
+          <th class="bg-white px-1.5 py-1.5 border border-slate-400 text-center">
+            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">Tarikh SP</label>
+            <input type="date" value="${currentDate}"
+              onchange="updateSpDate('${sp.code}', this.value)"
+              class="w-full text-[11px] font-semibold text-slate-900 bg-white border border-slate-300 rounded-md px-1 py-0.5 focus:outline-none focus:border-slate-800" />
+          </th>
+        `;
+      });
+      html += `</tr>`;
+      html += `</thead>`;
+
+      // ==================== BADAN JADUAL: SENARAI MURID & TP (TANPA WARNA) ====================
+      html += `<tbody class="divide-y divide-slate-300 bg-white">`;
+
+      if (students.length === 0) {
+        const totalCols = flattenedSps.length + 4;
+        html += `
+          <tr>
+            <td colspan="${totalCols}" class="py-14 px-6 text-center bg-white border border-slate-300">
+              <div class="max-w-md mx-auto space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-300 text-slate-800 flex items-center justify-center mx-auto">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <h4 class="font-display font-bold text-slate-900 text-base">Belum Ada Senarai Murid untuk ${escapeHtml(activeTitle)}</h4>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  Klik butang di bawah untuk menampal (copy & paste) terus semua nama murid anda. Sistem akan menyusun nombor siri 1, 2, 3... secara automatik.
+                </p>
+                <div class="pt-1">
+                  <button type="button" onclick="openBulkModal()"
+                    class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm cursor-pointer">
+                    + Tampal Senarai Nama Murid Sekarang
+                  </button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+      } else {
+        students.forEach((student, index) => {
+          const scores = student.scores || {};
+
+          // Kira purata TP murid bagi semua SP yang telah diisi dalam tahun ini
+          let sumTp = 0;
+          let countTp = 0;
+          allYearUnits.forEach(u => {
+            u.sps.forEach(sp => {
+              const val = Number(scores[sp.code]);
+              if (val >= 1 && val <= 6) {
+                sumTp += val;
+                countTp++;
+              }
+            });
+          });
+          const avgTp = countTp > 0 ? (sumTp / countTp).toFixed(1) : "-";
+          const roundedTp = countTp > 0 ? Math.round(sumTp / countTp) : 0;
+
+          html += `<tr class="bg-white hover:bg-slate-50 transition-colors">`;
+          // Bilangan (Auto-Nombor)
+          html += `<td class="sticky left-0 z-20 bg-white font-bold text-slate-800 px-3 py-2 border border-slate-300 text-center">${index + 1}</td>`;
+          // Nama Penuh Murid (Boleh diedit terus jika mahu betulkan ejaan)
+          html += `
+            <td class="sticky left-[48px] z-20 bg-white px-3 py-1.5 border border-slate-300 sticky-col-shadow">
+              <input type="text" value="${escapeHtml(student.name)}"
+                onchange="updateStudentName('${student.id}', this.value)"
+                class="w-full bg-transparent font-semibold text-slate-900 text-xs focus:bg-white focus:px-2 focus:py-1 focus:ring-1 focus:ring-slate-800 rounded outline-none" />
+            </td>
+          `;
+
+          // Sel Pilihan TP bagi setiap SP (Tanpa warna)
+          flattenedSps.forEach(sp => {
+            const tpVal = scores[sp.code] || "";
+            const badgeStyle = getTpSelectStyle(tpVal);
+            html += `
+              <td class="px-1.5 py-1.5 border border-slate-300 text-center bg-white">
+                <select onchange="updateStudentScore('${student.id}', '${sp.code}', this.value)"
+                  class="w-full py-1 px-1.5 rounded border text-xs font-bold text-center cursor-pointer outline-none transition ${badgeStyle}">
+                  <option value="" ${tpVal === "" ? "selected" : ""}>-</option>
+                  <option value="1" ${String(tpVal) === "1" ? "selected" : ""}>TP 1</option>
+                  <option value="2" ${String(tpVal) === "2" ? "selected" : ""}>TP 2</option>
+                  <option value="3" ${String(tpVal) === "3" ? "selected" : ""}>TP 3</option>
+                  <option value="4" ${String(tpVal) === "4" ? "selected" : ""}>TP 4</option>
+                  <option value="5" ${String(tpVal) === "5" ? "selected" : ""}>TP 5</option>
+                  <option value="6" ${String(tpVal) === "6" ? "selected" : ""}>TP 6</option>
+                </select>
+              </td>
+            `;
+          });
+
+          // Purata TP (Tanpa warna)
+          html += `
+            <td class="px-2 py-1.5 border border-slate-300 text-center bg-white">
+              <span class="inline-block px-2 py-0.5 rounded border border-slate-300 bg-white text-slate-900 font-extrabold text-xs">
+                ${avgTp} ${roundedTp > 0 ? `(TP${roundedTp})` : ""}
+              </span>
+            </td>
+          `;
+
+          // Butang Padam Murid
+          html += `
+            <td class="px-2 py-1.5 border border-slate-300 text-center bg-white no-print">
+              <button type="button" onclick="deleteStudent('${student.id}')" title="Padam murid ini"
+                class="p-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+                <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </td>
+          `;
+
+          html += `</tr>`;
+        });
+      }
+
+      html += `</tbody></table>`;
+      wrapper.innerHTML = html;
+    }
+
+    function getTpSelectStyle(tp) {
+      if (tp && Number(tp) >= 1 && Number(tp) <= 6) {
+        return "bg-white text-slate-900 border-slate-400";
+      }
+      return "bg-white text-slate-400 border-slate-200 hover:border-slate-400";
+    }
+
+    function getTpBadgeClass(tp) {
+      return "bg-white text-slate-900 border border-slate-300";
+    }
+
+    // ==================== KEMASKINI DATA MURID & SP ====================
+
+    function updateSpDate(spCode, dateValue) {
+      const classData = getCurrentClassData();
+      classData.spDates[spCode] = dateValue;
+      savePersistentState();
+      showToast(`Tarikh untuk SP ${spCode} dikemaskini untuk semua murid.`, "success");
+    }
+
+    function updateStudentScore(studentId, spCode, tpValue) {
+      const classData = getCurrentClassData();
+      const student = classData.students.find(s => s.id === studentId);
+      if (student) {
+        if (!student.scores) student.scores = {};
+        if (tpValue === "") {
+          delete student.scores[spCode];
+        } else {
+          student.scores[spCode] = Number(tpValue);
+        }
+        savePersistentState();
+        renderPBDTable();
+      }
+    }
+
+    function updateStudentName(studentId, newName) {
+      const trimmed = newName.trim();
+      if (!trimmed) return;
+      const classData = getCurrentClassData();
+      const student = classData.students.find(s => s.id === studentId);
+      if (student) {
+        student.name = trimmed;
+        savePersistentState();
+        showToast("Nama murid dikemaskini.", "info");
+      }
+    }
+
+    function deleteStudent(studentId) {
+      const classData = getCurrentClassData();
+      classData.students = classData.students.filter(s => s.id !== studentId);
+      savePersistentState();
+      renderPBDTable();
+      showToast("Murid dipadam & nombor siri disusun semula.", "info");
+    }
+
+    function clearCurrentClassRecords() {
+      const classData = getCurrentClassData();
+      if (classData.students.length === 0) return;
+
+      openCustomPrompt(
+        "Kosongkan Rekod TP",
+        `Taip "PADAM" untuk mengosongkan semua markah TP dan tarikh bagi Tahun ${appState.selectedYear} ${appState.selectedClass} (Senarai nama murid dikekalkan).`,
+        "PADAM",
+        (val) => {
+          if (val && val.trim().toUpperCase() === "PADAM") {
+            classData.spDates = {};
+            classData.students.forEach(s => { s.scores = {}; });
+            savePersistentState();
+            renderPBDTable();
+            showToast("Semua rekod TP kelas ini telah dikosongkan.", "info");
+          } else {
+            showToast("Tindakan dibatalkan.", "error");
+          }
+        }
+      );
+    }
+
+    // ==================== FUNGSI TAMPAL SENARAI NAMA (BULK PASTE) ====================
+
+    function cleanRawNames(rawText) {
+      return rawText
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        // Buang nombor siri sedia ada di hadapan seperti "1.", "1)", "01 -", "1 "
+        .map(line => line.replace(/^\d+[\.\)\-\:\s]+/, "").trim())
+        .filter(line => line.length > 0);
+    }
+
+    function openBulkModal() {
+      document.getElementById("modalTargetClass").textContent = `Tahun ${appState.selectedYear} ${appState.selectedClass}`;
+      document.getElementById("bulkNamesTextarea").value = "";
+      updateBulkPreview();
+      const modal = document.getElementById("bulkPasteModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      setTimeout(() => document.getElementById("bulkNamesTextarea").focus(), 100);
+    }
+
+    function closeBulkModal() {
+      const modal = document.getElementById("bulkPasteModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function updateBulkPreview() {
+      const raw = document.getElementById("bulkNamesTextarea").value;
+      const names = cleanRawNames(raw);
+      document.getElementById("bulkPreviewCount").textContent = `${names.length} murid dikesan`;
+
+      const listEl = document.getElementById("bulkPreviewList");
+      if (names.length === 0) {
+        listEl.innerHTML = `<p class="text-slate-400 italic">Tiada nama dimasukkan lagi...</p>`;
+        return;
+      }
+
+      listEl.innerHTML = names.map((n, i) => `
+        <div class="flex items-center gap-2 py-1 border-b border-[#2b242c] last:border-0">
+          <span class="font-bold text-[#d8b8d4] w-6">${i + 1}.</span>
+          <span class="text-white font-semibold">${escapeHtml(n)}</span>
+        </div>
+      `).join("");
+    }
+
+    function loadSampleStudents() {
+      const samples = [
+        "AHMAD DANISH BIN ZULKIFLI",
+        "NUR AISYAH BINTI MOHD RAZAK",
+        "MUHAMMAD IRFAN BIN HASSAN",
+        "SITI NURHALIZA BINTI KAMAL",
+        "CHONG WEI MING",
+        "KAVITHA A/P SUBRAMANIAM",
+        "NURUL IZZAH BINTI OTHMAN",
+        "ADAM HARITH BIN ISMAIL",
+        "LIM JIA YI",
+        "PUTERI BALQIS BINTI AZMAN"
+      ];
+      document.getElementById("bulkNamesTextarea").value = samples.join("\n");
+      updateBulkPreview();
+    }
+
+    function applyBulkNames(mode) {
+      const raw = document.getElementById("bulkNamesTextarea").value;
+      const names = cleanRawNames(raw);
+      if (names.length === 0) {
+        showToast("Sila masukkan sekurang-kurangnya satu nama murid.", "error");
+        return;
+      }
+
+      const classData = getCurrentClassData();
+      const newEntries = names.map((name, idx) => ({
+        id: "stu_" + Date.now() + "_" + idx + "_" + Math.random().toString(36).substring(2, 6),
+        name: name,
+        scores: {}
+      }));
+
+      if (mode === "replace") {
+        classData.students = newEntries;
+      } else {
+        classData.students = [...classData.students, ...newEntries];
+      }
+
+      savePersistentState();
+      renderPBDTable();
+      closeBulkModal();
+      showToast(`${names.length} nama murid berjaya disusun ikut nombor!`, "success");
+    }
+
+    // ==================== MODAL TAMBAH KELAS / 1 MURID ====================
+
+    let promptCallback = null;
+
+    function openCustomPrompt(title, desc, defaultValue, callback) {
+      document.getElementById("promptModalTitle").textContent = title;
+      document.getElementById("promptModalDesc").textContent = desc;
+      const input = document.getElementById("promptModalInput");
+      input.value = defaultValue || "";
+      promptCallback = callback;
+
+      const modal = document.getElementById("customPromptModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      setTimeout(() => input.focus(), 80);
+    }
+
+    function closeCustomPrompt() {
+      const modal = document.getElementById("customPromptModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      promptCallback = null;
+    }
+
+    function submitCustomPrompt() {
+      const val = document.getElementById("promptModalInput").value;
+      if (promptCallback) promptCallback(val);
+      closeCustomPrompt();
+    }
+
+    function openAddClassModal() {
+      openCustomPrompt(
+        "Tambah Nama Kelas Baharu",
+        "Masukkan nama kelas tambahan (contoh: Bestari, Cemerlang, Ibnu Sina):",
+        "",
+        (val) => {
+          const clean = val.trim();
+          if (!clean) return;
+          const all = [...DEFAULT_CLASSES, ...(appState.customClasses || [])];
+          if (!all.some(c => c.toLowerCase() === clean.toLowerCase())) {
+            appState.customClasses.push(clean);
+          }
+          appState.selectedClass = clean;
+          savePersistentState();
+          renderClassButtons();
+          renderPBDTable();
+          showToast(`Kelas "${clean}" ditambah.`, "success");
+        }
+      );
+    }
+
+    function addSingleStudentPrompt() {
+      openCustomPrompt(
+        "Tambah Seorang Murid",
+        `Masukkan nama penuh murid untuk Tahun ${appState.selectedYear} ${appState.selectedClass}:`,
+        "",
+        (val) => {
+          const clean = val.trim().replace(/^\d+[\.\)\-\:\s]+/, "");
+          if (!clean) return;
+          const classData = getCurrentClassData();
+          classData.students.push({
+            id: "stu_" + Date.now(),
+            name: clean,
+            scores: {}
+          });
+          savePersistentState();
+          renderPBDTable();
+          showToast(`Murid "${clean}" ditambah.`, "success");
+        }
+      );
+    }
+
+    // ==================== MODAL PERINCIAN SP & ISI PANTAS TP ====================
+
+    function openSpDetailModal(spCode) {
+      const units = RBT_SYLLABUS[appState.selectedYear] || [];
+      let foundUnit = null;
+      let foundSp = null;
+
+      for (const u of units) {
+        const sp = u.sps.find(s => s.code === spCode);
+        if (sp) {
+          foundUnit = u;
+          foundSp = sp;
+          break;
+        }
+      }
+
+      if (!foundSp) return;
+      activeSpModalCode = spCode;
+
+      const classData = getCurrentClassData();
+      document.getElementById("spModalCode").textContent = `SP ${foundSp.code}`;
+      document.getElementById("spModalUnitTitle").textContent = `${foundUnit.unitCode}: ${foundUnit.unitTitle}`;
+      document.getElementById("spModalDesc").textContent = foundSp.desc;
+      document.getElementById("spModalDateInput").value = classData.spDates[spCode] || "";
+
+      const modal = document.getElementById("spDetailModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeSpDetailModal() {
+      const modal = document.getElementById("spDetailModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      activeSpModalCode = null;
+    }
+
+    function bulkFillSpTp(tpVal) {
+      if (!activeSpModalCode) return;
+      const classData = getCurrentClassData();
+      if (classData.students.length === 0) {
+        showToast("Tiada murid dalam kelas ini.", "error");
+        return;
+      }
+
+      classData.students.forEach(s => {
+        if (!s.scores) s.scores = {};
+        if (tpVal === "") {
+          delete s.scores[activeSpModalCode];
+        } else {
+          s.scores[activeSpModalCode] = Number(tpVal);
+        }
+      });
+
+      savePersistentState();
+      renderPBDTable();
+      showToast(
+        tpVal === ""
+          ? `Semua markah TP untuk SP ${activeSpModalCode} dikosongkan.`
+          : `TP ${tpVal} diisi untuk semua murid bagi SP ${activeSpModalCode}.`,
+        "success"
+      );
+    }
+
+    function saveSpDetailModal() {
+      if (activeSpModalCode) {
+        const dateVal = document.getElementById("spModalDateInput").value;
+        const classData = getCurrentClassData();
+        classData.spDates[activeSpModalCode] = dateVal;
+        savePersistentState();
+        renderPBDTable();
+      }
+      closeSpDetailModal();
+    }
+
+    // ==================== EKSPORT KE MICROSOFT WORD (.DOC) ====================
+
+    function formatDisplayDate(isoDate) {
+      if (!isoDate) return "-";
+      const parts = isoDate.split("-");
+      if (parts.length !== 3) return isoDate;
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function downloadWord() {
+      const classData = getCurrentClassData();
+      const students = classData.students || [];
+      const spDates = classData.spDates || {};
+      const units = getFilteredUnits();
+
+      if (students.length === 0) {
+        showToast("Sila masukkan senarai nama murid terlebih dahulu sebelum muat turun.", "error");
+        return;
+      }
+
+      const teacher = appState.teacherName.trim() || "......................................................";
+      const session = appState.academicSession.trim() || "2026";
+      const classTitle = `Tahun ${appState.selectedYear} ${appState.selectedClass}`;
+
+      const flattenedSps = [];
+      units.forEach(u => u.sps.forEach(sp => flattenedSps.push(sp)));
+
+      let unitHeaderCells = "";
+      units.forEach(u => {
+        unitHeaderCells += `<th colspan="${u.sps.length}" style="background-color:#ffffff;color:#000000;font-weight:bold;padding:6px;border:1px solid #000000;text-align:center;font-size:9pt;">${escapeHtml(u.unitCode)}<br/>${escapeHtml(u.unitTitle)}</th>`;
+      });
+
+      let spHeaderCells = "";
+      flattenedSps.forEach(sp => {
+        spHeaderCells += `<th style="background-color:#ffffff;color:#000000;font-weight:bold;padding:4px;border:1px solid #000000;text-align:center;font-size:8pt;">SP ${escapeHtml(sp.code)}</th>`;
+      });
+
+      let dateHeaderCells = "";
+      flattenedSps.forEach(sp => {
+        dateHeaderCells += `<th style="background-color:#ffffff;color:#000000;font-weight:normal;padding:3px;border:1px solid #000000;text-align:center;font-size:7.5pt;">${formatDisplayDate(spDates[sp.code])}</th>`;
+      });
+
+      let bodyRows = "";
+      students.forEach((stu, idx) => {
+        const scores = stu.scores || {};
+        let sum = 0, cnt = 0;
+        let spCells = "";
+
+        flattenedSps.forEach(sp => {
+          const val = scores[sp.code] || "";
+          if (val >= 1 && val <= 6) {
+            sum += Number(val);
+            cnt++;
+          }
+          spCells += `<td style="border:1px solid #000000;padding:4px;text-align:center;font-size:8.5pt;font-weight:bold;background-color:#ffffff;color:#000000;">${val ? "TP" + val : ""}</td>`;
+        });
+
+        const avg = cnt > 0 ? (sum / cnt).toFixed(1) : "-";
+        bodyRows += `
+          <tr>
+            <td style="border:1px solid #000000;padding:4px;text-align:center;font-size:8.5pt;background-color:#ffffff;color:#000000;">${idx + 1}</td>
+            <td style="border:1px solid #000000;padding:4px 6px;text-align:left;font-size:8.5pt;font-weight:bold;background-color:#ffffff;color:#000000;">${escapeHtml(stu.name)}</td>
+            ${spCells}
+            <td style="border:1px solid #000000;padding:4px;text-align:center;font-size:8.5pt;font-weight:bold;background-color:#ffffff;color:#000000;">${avg}</td>
+          </tr>
+        `;
+      });
+
+      const wordHtml = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office'
+              xmlns:w='urn:schemas-microsoft-com:office:word'
+              xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Rekod PBD RBT ${escapeHtml(classTitle)}</title>
+          <style>
+            @page WordSection1 {
+              size: 841.9pt 595.3pt;
+              mso-page-orientation: landscape;
+              margin: 36.0pt 36.0pt 36.0pt 36.0pt;
+            }
+            div.WordSection1 { page: WordSection1; }
+            body { font-family: Arial, sans-serif; color: #000000; }
+            table { border-collapse: collapse; width: 100%; }
+          </style>
+        </head>
+        <body>
+          <div class="WordSection1">
+            <h2 style="margin:0 0 4px 0;font-size:13pt;color:#000000;">REKOD PENTAKSIRAN BILIK DARJAH (PBD) — REKA BENTUK DAN TEKNOLOGI (RBT)</h2>
+            <p style="margin:0 0 10px 0;font-size:9.5pt;color:#000000;">
+              <strong>Kelas:</strong> ${escapeHtml(classTitle)} &nbsp;&nbsp;|&nbsp;&nbsp;
+              <strong>Nama Guru:</strong> ${escapeHtml(teacher)} &nbsp;&nbsp;|&nbsp;&nbsp;
+              <strong>Sesi:</strong> ${escapeHtml(session)}
+            </p>
+
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="3" style="background-color:#ffffff;color:#000000;padding:5px;border:1px solid #000000;font-size:8.5pt;width:28px;">BIL</th>
+                  <th rowspan="3" style="background-color:#ffffff;color:#000000;padding:5px;border:1px solid #000000;font-size:8.5pt;text-align:left;width:180px;">NAMA PENUH MURID</th>
+                  ${unitHeaderCells}
+                  <th rowspan="3" style="background-color:#ffffff;color:#000000;padding:5px;border:1px solid #000000;font-size:8.5pt;width:45px;">PURATA</th>
+                </tr>
+                <tr>${spHeaderCells}</tr>
+                <tr>${dateHeaderCells}</tr>
+              </thead>
+              <tbody>
+                ${bodyRows}
+              </tbody>
+            </table>
+
+            <br/>
+            <table style="width:100%;border:none;margin-top:16px;font-size:9pt;">
+              <tr>
+                <td style="border:none;width:50%;">
+                  Disediakan oleh,<br/><br/><br/>
+                  .........................................................<br/>
+                  <strong>(${escapeHtml(teacher)})</strong><br/>
+                  Guru Mata Pelajaran RBT
+                </td>
+                <td style="border:none;width:50%;">
+                  Disahkan oleh,<br/><br/><br/>
+                  .........................................................<br/>
+                  <strong>(Ketua Panitia RBT / Pentadbir)</strong>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(["\ufeff", wordHtml], { type: "application/msword" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Rekod_PBD_RBT_Tahun_${appState.selectedYear}_${appState.selectedClass.replace(/\s+/g, "_")}.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast("Fail Microsoft Word (.doc) sedang dimuat turun!", "success");
+    }
+
+    // ==================== EKSPORT KE PDF (.PDF) ====================
+
+    function downloadPDF() {
+      const classData = getCurrentClassData();
+      const students = classData.students || [];
+      const spDates = classData.spDates || {};
+      const units = getFilteredUnits();
+
+      if (students.length === 0) {
+        showToast("Sila masukkan senarai nama murid terlebih dahulu sebelum muat turun.", "error");
+        return;
+      }
+
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        showToast("Pustaka PDF sedang dimuatkan. Sila cuba sebentar lagi.", "error");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+      const teacher = appState.teacherName.trim() || "......................................................";
+      const session = appState.academicSession.trim() || "2026";
+      const classTitle = `Tahun ${appState.selectedYear} ${appState.selectedClass}`;
+
+      // Tajuk Dokumen PDF (Hitam Putih Rasmi)
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text("REKOD PENTAKSIRAN BILIK DARJAH (PBD) — REKA BENTUK DAN TEKNOLOGI (RBT)", 14, 13);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Kelas: ${classTitle}   |   Nama Guru: ${teacher}   |   Sesi: ${session}`, 14, 19);
+
+      const flattenedSps = [];
+      units.forEach(u => u.sps.forEach(sp => flattenedSps.push(sp)));
+
+      // Bina baris kepala jadual PDF (3 baris: Bab, SP, Tarikh — Tanpa Warna)
+      const headRow1 = [
+        { content: "BIL", rowSpan: 3, styles: { halign: "center", valign: "middle", fillColor: [255, 255, 255], textColor: [0, 0, 0] } },
+        { content: "NAMA PENUH MURID", rowSpan: 3, styles: { halign: "left", valign: "middle", fillColor: [255, 255, 255], textColor: [0, 0, 0] } }
+      ];
+
+      units.forEach(u => {
+        headRow1.push({
+          content: `${u.unitCode}: ${u.unitTitle}`,
+          colSpan: u.sps.length,
+          styles: { halign: "center", fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 6.5 }
+        });
+      });
+
+      headRow1.push({
+        content: "PURATA",
+        rowSpan: 3,
+        styles: { halign: "center", valign: "middle", fillColor: [255, 255, 255], textColor: [0, 0, 0] }
+      });
+
+      const headRow2 = flattenedSps.map(sp => ({
+        content: `SP ${sp.code}`,
+        styles: { halign: "center", fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 6 }
+      }));
+
+      const headRow3 = flattenedSps.map(sp => ({
+        content: formatDisplayDate(spDates[sp.code]),
+        styles: { halign: "center", fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 5.5, fontStyle: "normal" }
+      }));
+
+      // Bina baris data murid
+      const bodyData = students.map((stu, idx) => {
+        const scores = stu.scores || {};
+        let sum = 0, cnt = 0;
+
+        const row = [idx + 1, stu.name];
+        flattenedSps.forEach(sp => {
+          const val = scores[sp.code] || "";
+          if (val >= 1 && val <= 6) {
+            sum += Number(val);
+            cnt++;
+          }
+          row.push(val ? `TP${val}` : "");
+        });
+
+        const avg = cnt > 0 ? (sum / cnt).toFixed(1) : "-";
+        row.push(avg);
+        return row;
+      });
+
+      doc.autoTable({
+        startY: 23,
+        head: [headRow1, headRow2, headRow3],
+        body: bodyData,
+        theme: "grid",
+        styles: {
+          fontSize: 6.5,
+          cellPadding: 1.4,
+          fillColor: [255, 255, 255],
+          lineColor: [0, 0, 0],
+          lineWidth: 0.2,
+          textColor: [0, 0, 0],
+          halign: "center",
+          valign: "middle"
+        },
+        headStyles: {
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
+          lineColor: [0, 0, 0],
+          lineWidth: 0.2,
+          fontStyle: "bold"
+        },
+        alternateRowStyles: {
+          fillColor: [255, 255, 255]
+        },
+        columnStyles: {
+          0: { cellWidth: 8, halign: "center" },
+          1: { cellWidth: 46, halign: "left", fontStyle: "bold" }
+        },
+        margin: { left: 14, right: 14 }
+      });
+
+      // Ruangan Tandatangan di bahagian bawah PDF
+      const finalY = doc.lastAutoTable.finalY + 12;
+      if (finalY < 185) {
+        doc.setFontSize(8);
+        doc.setTextColor(0, 0, 0);
+        doc.text("Disediakan oleh,", 14, finalY);
+        doc.text(".........................................................", 14, finalY + 12);
+        doc.setFont("helvetica", "bold");
+        doc.text(`(${teacher})`, 14, finalY + 16);
+        doc.setFont("helvetica", "normal");
+        doc.text("Guru Mata Pelajaran RBT", 14, finalY + 20);
+
+        doc.text("Disahkan oleh,", 160, finalY);
+        doc.text(".........................................................", 160, finalY + 12);
+        doc.setFont("helvetica", "bold");
+        doc.text("(Ketua Panitia RBT / Pentadbir)", 160, finalY + 16);
+      }
+
+      doc.save(`Rekod_PBD_RBT_Tahun_${appState.selectedYear}_${appState.selectedClass.replace(/\s+/g, "_")}.pdf`);
+      showToast("Fail PDF (.pdf) berjaya dijana dan dimuat turun!", "success");
+    }
+
+    // ==================== UTILITI & TOAST ====================
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toastContainer");
+      if (!container) return;
+
+      const colors = {
+        success: "bg-emerald-950/95 border-emerald-500/60 text-emerald-100",
+        error: "bg-rose-950/95 border-rose-500/60 text-rose-100",
+        info: "bg-[#1a151c]/95 border-[#b893b4]/60 text-[#f3e6f2]"
+      };
+
+      const toast = document.createElement("div");
+      toast.className = `toast-enter pointer-events-auto px-4 py-2.5 rounded-2xl border text-xs font-semibold shadow-lg backdrop-blur-md flex items-center gap-2 ${colors[type] || colors.info}`;
+      toast.textContent = message;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.25s ease";
+        setTimeout(() => toast.remove(), 250);
+      }, 2800);
+    }
+
+    // ==================== PENUKAR TEMA DARK / LIGHT ====================
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem("rbt_pbd_theme") || "dark";
+      applyTheme(savedTheme);
+    }
+
+    function toggleTheme(event) {
+      const isLight = document.body.classList.contains("light-theme");
+      const nextTheme = isLight ? "dark" : "light";
+      localStorage.setItem("rbt_pbd_theme", nextTheme);
+
+      const overlay = document.getElementById("themeRippleOverlay");
+      const ring = document.getElementById("waterDropRing");
+      if (overlay && event && event.currentTarget) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+
+        overlay.style.setProperty("--ripple-x", `${x}px`);
+        overlay.style.setProperty("--ripple-y", `${y}px`);
+        overlay.style.background = nextTheme === "light"
+          ? "radial-gradient(circle at var(--ripple-x) var(--ripple-y), rgba(255, 255, 255, 0.98) 0%, rgba(244, 245, 247, 0.95) 65%, rgba(226, 232, 240, 0.9) 100%)"
+          : "radial-gradient(circle at var(--ripple-x) var(--ripple-y), rgba(38, 30, 41, 0.98) 0%, rgba(22, 19, 23, 0.96) 65%, rgba(13, 11, 14, 0.94) 100%)";
+        overlay.style.opacity = "1";
+        overlay.classList.remove("active");
+
+        if (ring) {
+          ring.style.setProperty("--ripple-x", `${x}px`);
+          ring.style.setProperty("--ripple-y", `${y}px`);
+          ring.style.borderColor = nextTheme === "light" ? "rgba(148, 163, 184, 0.85)" : "rgba(184, 147, 180, 0.9)";
+          ring.classList.remove("splash");
+          void ring.offsetWidth;
+          ring.classList.add("splash");
+        }
+
+        void overlay.offsetWidth;
+        overlay.classList.add("active");
+
+        setTimeout(() => {
+          applyTheme(nextTheme);
+        }, 320);
+
+        setTimeout(() => {
+          overlay.style.opacity = "0";
+          setTimeout(() => overlay.classList.remove("active"), 350);
+        }, 720);
+      } else {
+        applyTheme(nextTheme);
+      }
+    }
+
+    function applyTheme(theme) {
+      const darkSlots = document.querySelectorAll(".dark-slot");
+      const lightSlots = document.querySelectorAll(".light-slot");
+      if (theme === "light") {
+        document.body.classList.add("light-theme");
+        darkSlots.forEach(el => {
+          el.className = "theme-icon-slot mr-auto text-slate-500 dark-slot";
+          el.style.transform = "scale(0.85)";
+        });
+        lightSlots.forEach(el => {
+          el.className = "theme-icon-slot ml-auto text-amber-500 light-slot";
+          el.style.transform = "rotate(90deg) scale(1.05)";
+        });
+      } else {
+        document.body.classList.remove("light-theme");
+        darkSlots.forEach(el => {
+          el.className = "theme-icon-slot mr-auto text-[#0d0b0e] dark-slot";
+          el.style.transform = "rotate(0deg) scale(1.05)";
+        });
+        lightSlots.forEach(el => {
+          el.className = "theme-icon-slot ml-auto text-slate-400 light-slot";
+          el.style.transform = "scale(0.85)";
+        });
+      }
+    }
+
+    // Dedahkan fungsi kepada global window untuk pengendali atribut HTML onclick / onchange
+    Object.assign(window, {
+      toggleTheme,
+      switchAuthMode,
+      handleAuthSubmit,
+      enterGuestMode,
+      logoutTeacher,
+      handleTeacherInfoChange,
+      selectYear,
+      selectClass,
+      selectUnitFilter,
+      openBulkModal,
+      closeBulkModal,
+      updateBulkPreview,
+      loadSampleStudents,
+      applyBulkNames,
+      openAddClassModal,
+      addSingleStudentPrompt,
+      closeCustomPrompt,
+      submitCustomPrompt,
+      openSpDetailModal,
+      closeSpDetailModal,
+      bulkFillSpTp,
+      saveSpDetailModal,
+      updateSpDate,
+      updateStudentScore,
+      updateStudentName,
+      deleteStudent,
+      clearCurrentClassRecords,
+      downloadWord,
+      downloadPDF
+    });
+  </script>
+</body>
+</html>
